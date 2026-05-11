@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Typing Trainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1218;
+      --panel: #161b24;
+      --text: #e8edf5;
+      --muted: #a8b2c5;
+      --accent: #3f8cff;
+      --ok: #2fbf71;
+      --warn: #e7b416;
+      --bad: #e15252;
+      --border: #273043;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 500px at 10% -10%, #1f2738 0%, var(--bg) 50%);
+      color: var(--text);
+      font-family: "Inter", "Segoe UI", Tahoma, sans-serif;
+      min-height: 100vh;
+    }
+    .app {
+      max-width: 1000px;
+      margin: 24px auto;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      min-height: 640px;
+    }
+    .screen {
+      width: 100%;
+    }
+    .slide-enter {
+      animation: slideInLeft 320ms ease forwards;
+    }
+    .slide-exit {
+      animation: slideOutLeft 320ms ease forwards;
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0.9; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideOutLeft {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0.88; transform: translateX(-40px); }
+    }
+    .panel {
+      background: linear-gradient(180deg, #192131, var(--panel));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+    h1, h2, h3 { margin: 0 0 10px; }
+    p { line-height: 1.55; color: var(--muted); }
+    .hidden { display: none !important; }
+    .typing-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #0f1522;
+      border: 1px solid var(--border);
+      font-size: 20px;
+      line-height: 1.7;
+      letter-spacing: 0.2px;
+      user-select: none;
+      min-height: 160px;
+    }
+    .typing-box.diagnostic-typing {
+      font-family: "Roboto Mono", Consolas, monospace;
+      line-height: 1.7;
+      height: calc(1.7em * 3 + 28px);
+      overflow: hidden;
+      position: relative;
+    }
+    .diag-track {
+      display: flex;
+      flex-direction: column;
+      transform: translateY(0);
+      transition: transform 260ms ease;
+      will-change: transform;
+    }
+    .diag-line {
+      min-height: 1.7em;
+      white-space: pre;
+    }
+    .char { color: #8c97ad; }
+    .char.done.ok { color: var(--ok); }
+    .char.done.bad { color: var(--bad); }
+    .char.current {
+      color: var(--text);
+      background: #273654;
+      border-radius: 4px;
+      padding: 0 1px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .input-row {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .input-row input[type="text"] {
+      width: 100%;
+      background: #0d1420;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 18px;
+      outline: none;
+    }
+    button {
+      background: #233a66;
+      color: var(--text);
+      border: 1px solid #35528c;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: transform 130ms ease, background 130ms ease;
+    }
+    button:hover { background: #2d4a82; transform: translateY(-1px); }
+    button.secondary {
+      background: #1c2638;
+      border-color: var(--border);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #0f1522;
+      padding: 12px;
+    }
+    .kpi .v { font-size: 26px; font-weight: 700; }
+    ul { margin: 8px 0 0 18px; color: var(--muted); }
+    .keyboard {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(42px, 1fr));
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .key {
+      text-align: center;
+      border-radius: 8px;
+      border: 1px solid #1f2c44;
+      background: #111a2a;
+      padding: 8px 2px;
+      font-size: 12px;
+      color: #d9e2f3;
+    }
+    .progress-wrap {
+      width: 100%;
+      height: 14px;
+      background: #0f1522;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2b73e0, #47d2a3);
+      transition: width 160ms ease;
+    }
+    .fade-in { animation: fade 220ms ease; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .welcome-wrap {
+      min-height: 560px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex-direction: column;
+      gap: 18px;
+      padding: 16px;
+    }
+    .welcome-wrap h2 {
+      font-size: 46px;
+      margin: 0;
+    }
+    .welcome-wrap p {
+      max-width: 780px;
+      font-size: 28px;
+      line-height: 1.35;
+      color: #e1e8f4;
+      margin: 0;
+    }
+    .welcome-actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 26px;
+      justify-content: center;
+    }
+    .btn-exit {
+      background: #d36d6d;
+      border-color: #e58a8a;
+      color: #170909;
+      min-width: 126px;
+      font-size: 28px;
+      padding: 12px 16px;
+    }
+    .btn-ok {
+      background: #8fca8f;
+      border-color: #a5d9a5;
+      color: #0e240e;
+      min-width: 126px;
+      font-size: 28px;
+      padding: 12px 16px;
+    }
+    .onboarding-wrap {
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 18px 12px 6px;
+      text-align: center;
+    }
+    .onboarding-wrap h2 {
+      margin: 6px 0 0;
+      font-size: 72px;
+      font-weight: 400;
+    }
+    .onboarding-sub {
+      margin-top: 18px;
+      font-size: 56px;
+      font-style: italic;
+      color: #f1f5fc;
+    }
+    .onboarding-sep {
+      width: 100%;
+      height: 1px;
+      background: #2b3447;
+      margin: 24px 0 28px;
+    }
+    .onboarding-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 18px;
+    }
+    .level-card {
+      border: 2px solid #344158;
+      background: #121a29;
+      color: var(--text);
+      border-radius: 18px;
+      padding: 18px;
+      min-height: 200px;
+      text-align: left;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+      cursor: pointer;
+    }
+    .level-card:hover {
+      transform: translateY(-2px);
+      border-color: #4c6aa0;
+      background: #17243a;
+    }
+    .bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 4px;
+      margin-bottom: 8px;
+      height: 36px;
+    }
+    .bars span {
+      width: 12px;
+      border-radius: 3px;
+      border: 1px solid #9ba5b7;
+      background: transparent;
+      display: inline-block;
+    }
+    .bars .on { background: #dce6f8; border-color: #dce6f8; }
+    .bars .h1 { height: 18px; }
+    .bars .h2 { height: 27px; }
+    .bars .h3 { height: 36px; }
+    .level-title {
+      font-size: 34px;
+      line-height: 1.2;
+      margin-top: 8px;
+    }
+    .level-range {
+      margin-top: 12px;
+      color: #b8c3d8;
+      font-size: 28px;
+    }
+    @media (max-width: 920px) {
+      .onboarding-grid { grid-template-columns: 1fr; }
+      .onboarding-wrap h2 { font-size: 52px; }
+      .onboarding-sub { font-size: 34px; }
+      .welcome-wrap h2 { font-size: 40px; }
+      .welcome-wrap p { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="welcomeScreen" class="screen panel">
+      <div class="welcome-wrap">
+        <h2>Welcome to Typing Trainer!</h2>
+        <p>Before we get to know you; understand this is an early version of Typing Trainer, and things may not work. Typing Trainer may crash, and features may not be implemented yet.</p>
+        <div class="welcome-actions">
+          <button id="exitBtn" class="btn-exit">Exit</button>
+          <button id="gotItBtn" class="btn-ok">I GOT IT!</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="onboardingScreen" class="screen panel hidden">
+      <div class="onboarding-wrap">
+        <h2>Onboarding</h2>
+        <div class="onboarding-sub">What's your current typing level?</div>
+        <div class="onboarding-sep"></div>
+        <div class="onboarding-grid">
+          <button class="level-card" data-level="little">
+            <div class="bars"><span class="on h1"></span><span class="h2"></span><span class="h3"></span></div>
+            <div class="level-title">Little experience</div>
+            <div class="level-range">(0-39 WPM)</div>
+          </button>
+          <button class="level-card" data-level="some">
+            <div class="bars"><span class="on h1"></span><span class="on h2"></span><span class="h3"></span></div>
+            <div class="level-title">Some experience</div>
+            <div class="level-range">(40-99 WPM)</div>
+          </button>
+          <button class="level-card" data-level="accuracy">
+            <div class="bars"><span class="on h1"></span><span class="on h2"></span><span class="on h3"></span></div>
+            <div class="level-title">I'm just here to improve accuracy</div>
+            <div class="level-range">(100+ WPM)</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div id="mainHeader" class="panel hidden">
+      <h1>Typing Trainer</h1>
+    </div>
+
+    <section id="diagnosticPhase" class="screen panel hidden">
+      <h2>Diagnostic</h2>
+      <div id="diagnosticText" class="typing-box diagnostic-typing"></div>
+    </section>
+
+    <section id="resultsPhase" class="screen panel hidden">
+      <h2>Results</h2>
+      <div class="grid">
+        <div class="kpi"><div>WPM</div><div id="resWpm" class="v">0</div></div>
+        <div class="kpi"><div>Accuracy</div><div id="resAcc" class="v">0%</div></div>
+        <div class="kpi"><div>Rhythm</div><div id="resRhythm" class="v">Stable</div></div>
+      </div>
+      <div class="grid" style="margin-top:10px;">
+        <div class="kpi"><h3>Top 5 Slowest Keys</h3><ul id="slowKeys"></ul></div>
+        <div class="kpi"><h3>Top 5 Slowest Bigrams</h3><ul id="slowBigrams"></ul></div>
+      </div>
+      <div class="kpi" style="margin-top:10px;">
+        <h3>Keyboard Speed Heatmap</h3>
+        <div id="keyboardMap" class="keyboard"></div>
+      </div>
+      <div style="margin-top:12px;">
+        <button id="startDrillsBtn">Start Training Session</button>
+      </div>
+    </section>
+
+    <section id="drillsPhase" class="screen panel hidden">
+      <h2>Drills (Session Mode)</h2>
+      <div class="grid">
+        <div class="kpi"><div>Live WPM</div><div id="drillWpm" class="v">0</div></div>
+        <div class="kpi"><div>Live Accuracy</div><div id="drillAcc" class="v">100%</div></div>
+        <div class="kpi"><div>Correct Chars</div><div id="drillChars" class="v">0 / 1000</div></div>
+      </div>
+      <div style="margin:12px 0 8px;">Progress</div>
+      <div class="progress-wrap"><div id="progressBar" class="progress"></div></div>
+      <div id="drillText" class="typing-box" style="margin-top:12px;"></div>
+      <div class="input-row">
+        <input id="drillInput" type="text" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type to train..." />
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const INTRO_TEXT = "Welcome to Typing Trainer! Typing Trainer is an intelligent program made to help you identify your weak spots in typing, with courses to help fight against these. Typing Trainer includes a personalized typing diagnostic that analyzes real keystroke behavior instead of just speed, tracking timing, accuracy, and rhythm consistency in real time. It provides a detailed performance breakdown after each session, including weak keys, difficult key pairs, and hesitation patterns that affect flow. The system feeds you adaptive practice drills based on your weaknesses, prioritizing problem areas instead of using generic lessons. Understand that Typing Trainer is to help build accuracy (and some speed). Did you know 40% of people type under a 90% accuracy? Let's train and improve!";
+
+    const STORAGE_KEY = "typingTrainerStateV1";
+    const HISTORY_KEY = "typingTrainerHistoryV1";
+    const LEVEL_KEY = "typingTrainerOnboardingLevel";
+
+    const state = {
+      phase: "welcome",
+      keystrokes: [],
+      startTime: null,
+      diagnosticText: INTRO_TEXT,
+      results: {},
+      stats: {
+        keySpeed: {},
+        bigramSpeed: {},
+        errors: {},
+        sessions: []
+      },
+      sessionProgress: 0,
+      sessionTarget: 1000
+    };
+
+    const runtime = {
+      diagIndex: 0,
+      diagCurrentLine: 0,
+      diagLines: [],
+      diagLineStartIndices: [],
+      diagMistakes: new Set(),
+      diagDone: false,
+      drillText: "",
+      drillIndex: 0,
+      drillStart: null,
+      drillCorrect: 0,
+      drillTotal: 0,
+      lastCharTime: null,
+      lastAcceptedChar: "",
+      rhythmSpikes: 0
+    };
+    let activeScreenId = "welcomeScreen";
+
+    const ui = {
+      mainHeader: document.getElementById("mainHeader"),
+      welcomeScreen: document.getElementById("welcomeScreen"),
+      onboardingScreen: document.getElementById("onboardingScreen"),
+      exitBtn: document.getElementById("exitBtn"),
+      gotItBtn: document.getElementById("gotItBtn"),
+      levelCards: Array.from(document.querySelectorAll(".level-card")),
+      diagnosticPhase: document.getElementById("diagnosticPhase"),
+      resultsPhase: document.getElementById("resultsPhase"),
+      drillsPhase: document.getElementById("drillsPhase"),
+      diagnosticText: document.getElementById("diagnosticText"),
+      resWpm: document.getElementById("resWpm"),
+      resAcc: document.getElementById("resAcc"),
+      resRhythm: document.getElementById("resRhythm"),
+      slowKeys: document.getElementById("slowKeys"),
+      slowBigrams: document.getElementById("slowBigrams"),
+      keyboardMap: document.getElementById("keyboardMap"),
+      startDrillsBtn: document.getElementById("startDrillsBtn"),
+      drillText: document.getElementById("drillText"),
+      drillInput: document.getElementById("drillInput"),
+      drillWpm: document.getElementById("drillWpm"),
+      drillAcc: document.getElementById("drillAcc"),
+      drillChars: document.getElementById("drillChars"),
+      progressBar: document.getElementById("progressBar")
+    };
+
+    const keyboardRows = [
+      "qwertyuiop",
+      "asdfghjkl",
+      "zxcvbnm"
+    ];
+
+    const wordList = [
+      "focus","logic","smooth","signal","timing","typing","method","rhythm","keyboard","pattern",
+      "repeat","control","motion","spelling","correct","steady","stream","skill","debug","clarity",
+      "gentle","rapid","window","memory","pause","error","letter","lesson","simple","adaptive",
+      "practice","insight","review","improve","change","growth","measure","report","drill","stable",
+      "energy","accuracy","speed","process","session","train","habit","result","visual","analysis"
+    ];
+
+    function now() {
+      return performance.now();
+    }
+
+    function toLetter(ch) {
+      return (ch || "").toLowerCase();
+    }
+
+    function ensureMetric(map, key) {
+      if (!map[key]) map[key] = { total: 0, count: 0 };
+      return map[key];
+    }
+
+    function addMetric(map, key, value) {
+      const m = ensureMetric(map, key);
+      m.total += value;
+      m.count += 1;
+    }
+
+    function meanMetric(map, key) {
+      const m = map[key];
+      return m && m.count ? m.total / m.count : null;
+    }
+
+    function avgFromMetric(metric) {
+      return metric.count ? metric.total / metric.count : 0;
+    }
+
+    function showScreen(targetId) {
+      if (activeScreenId === targetId) return;
+      const current = document.getElementById(activeScreenId);
+      const next = document.getElementById(targetId);
+      if (!next) return;
+      if (current) {
+        current.classList.remove("slide-enter");
+        current.classList.add("slide-exit");
+      }
+      next.classList.remove("hidden", "slide-exit");
+      next.classList.add("slide-enter");
+      setTimeout(() => {
+        if (current) current.classList.add("hidden");
+        if (current) current.classList.remove("slide-exit");
+        next.classList.remove("slide-enter");
+      }, 320);
+      activeScreenId = targetId;
+    }
+
+    function switchPhase(phase) {
+      state.phase = phase;
+      ui.mainHeader.classList.remove("hidden");
+      if (phase === "diagnostic") {
+        buildDiagnosticLines();
+        runtime.diagCurrentLine = Math.max(0, Math.min(diagnosticIndexToLine(runtime.diagIndex), Math.max(0, runtime.diagLines.length - 3)));
+        renderDiagnosticText(runtime.diagCurrentLine, runtime.diagCurrentLine);
+        showScreen("diagnosticPhase");
+      }
+      if (phase === "results") showScreen("resultsPhase");
+      if (phase === "drills") showScreen("drillsPhase");
+      saveState();
+    }
+
+    function escapeHtml(ch) {
+      return ch.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function splitDiagnosticIntoLines(text, width) {
+      const words = text.split(" ");
+      const lines = [];
+      let current = "";
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const next = current ? `${current} ${word}` : word;
+        if (next.length <= width) current = next;
+        else {
+          if (current) lines.push(current);
+          current = word;
+        }
+      }
+      if (current) lines.push(current);
+      return lines;
+    }
+
+    function getDiagnosticLineCapacity() {
+      const style = getComputedStyle(ui.diagnosticText);
+      const testCanvas = document.createElement("canvas");
+      const ctx = testCanvas.getContext("2d");
+      ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const charWidth = ctx.measureText("M").width || 10;
+      const available = ui.diagnosticText.clientWidth - 28;
+      const capacity = Math.floor(available / charWidth);
+      return Math.max(18, capacity);
+    }
+
+    function buildDiagnosticLines() {
+      runtime.diagLines = splitDiagnosticIntoLines(state.diagnosticText, getDiagnosticLineCapacity());
+      runtime.diagLineStartIndices = [];
+      let idx = 0;
+      for (let i = 0; i < runtime.diagLines.length; i++) {
+        runtime.diagLineStartIndices.push(idx);
+        idx += runtime.diagLines[i].length;
+        if (i < runtime.diagLines.length - 1) idx += 1;
+      }
+    }
+
+    function diagnosticIndexToLine(index) {
+      for (let i = runtime.diagLineStartIndices.length - 1; i >= 0; i--) {
+        if (index >= runtime.diagLineStartIndices[i]) return i;
+      }
+      return 0;
+    }
+
+    function renderDiagnosticText(baseLine, animateToLine) {
+      const lineHeightPx = parseFloat(getComputedStyle(ui.diagnosticText).lineHeight);
+      const trackParts = [];
+      for (let lineIdx = 0; lineIdx < runtime.diagLines.length; lineIdx++) {
+        const line = runtime.diagLines[lineIdx];
+        const start = runtime.diagLineStartIndices[lineIdx];
+        let lineHtml = "";
+        for (let j = 0; j < line.length; j++) {
+          const globalIdx = start + j;
+          let cls = "char";
+          if (globalIdx < runtime.diagIndex) cls += runtime.diagMistakes.has(globalIdx) ? " done bad" : " done ok";
+          if (globalIdx === runtime.diagIndex) cls += " current";
+          const ch = line[j] === " " ? "&nbsp;" : escapeHtml(line[j]);
+          lineHtml += `<span class="${cls}">${ch}</span>`;
+        }
+        trackParts.push(`<div class="diag-line">${lineHtml}</div>`);
+      }
+      ui.diagnosticText.innerHTML = `<div id="diagTrack" class="diag-track">${trackParts.join("")}</div>`;
+      const track = document.getElementById("diagTrack");
+      const fromLine = typeof baseLine === "number" ? baseLine : runtime.diagCurrentLine;
+      const toLine = typeof animateToLine === "number" ? animateToLine : fromLine;
+      track.style.transition = fromLine !== toLine ? "transform 260ms ease" : "none";
+      track.style.transform = `translateY(-${fromLine * lineHeightPx}px)`;
+      if (fromLine !== toLine) {
+        requestAnimationFrame(() => {
+          track.style.transform = `translateY(-${toLine * lineHeightPx}px)`;
+        });
+      }
+    }
+
+    function renderTargetText(container, text, index, mistakesSet) {
+      let out = "";
+      for (let i = 0; i < text.length; i++) {
+        let cls = "char";
+        if (i < index) cls += mistakesSet.has(i) ? " done bad" : " done ok";
+        if (i === index) cls += " current";
+        const ch = text[i] === " " ? "&nbsp;" : escapeHtml(text[i]);
+        out += `<span class="${cls}">${ch}</span>`;
+      }
+      container.innerHTML = out;
+    }
+
+    function resetDiagnostic() {
+      runtime.diagIndex = 0;
+      runtime.diagCurrentLine = 0;
+      runtime.diagMistakes.clear();
+      runtime.diagDone = false;
+      state.keystrokes = [];
+      state.startTime = null;
+      runtime.lastCharTime = null;
+      runtime.lastAcceptedChar = "";
+      runtime.rhythmSpikes = 0;
+      buildDiagnosticLines();
+      renderDiagnosticText(0, 0);
+    }
+
+    function recordKeyEvent(expected, actual, isCorrect) {
+      const t = now();
+      if (state.startTime === null) state.startTime = t;
+      const dt = runtime.lastCharTime === null ? 0 : t - runtime.lastCharTime;
+      const key = toLetter(expected);
+      if (runtime.lastCharTime !== null && expected !== " " && runtime.lastAcceptedChar !== " " && dt > 300) {
+        runtime.rhythmSpikes += 1;
+      }
+      if (isCorrect && key) addMetric(state.stats.keySpeed, key, dt);
+      if (isCorrect && runtime.lastAcceptedChar) addMetric(state.stats.bigramSpeed, `${runtime.lastAcceptedChar}${key}`, dt);
+      if (!isCorrect && key) state.stats.errors[key] = (state.stats.errors[key] || 0) + 1;
+      state.keystrokes.push({ t, dt, expected, actual, correct: isCorrect });
+      runtime.lastCharTime = t;
+      if (isCorrect) runtime.lastAcceptedChar = key;
+    }
+
+    function handleDiagnosticKeydown(e) {
+      if (state.phase !== "diagnostic" || runtime.diagDone) return;
+      if (e.key === "Tab" || e.key === "Alt" || e.key === "Shift" || e.key === "Control" || e.key === "Meta") return;
+      if (e.key === "Backspace") return;
+      if (e.key.length !== 1) return;
+      e.preventDefault();
+
+      const expected = state.diagnosticText[runtime.diagIndex];
+      if (!expected) return;
+      const actual = e.key;
+      const isCorrect = actual === expected;
+      recordKeyEvent(expected, actual, isCorrect);
+      if (isCorrect) runtime.diagIndex += 1;
+      else runtime.diagMistakes.add(runtime.diagIndex);
+
+      const nextLine = diagnosticIndexToLine(runtime.diagIndex);
+      const prevLine = runtime.diagCurrentLine;
+      runtime.diagCurrentLine = Math.max(0, Math.min(nextLine, Math.max(0, runtime.diagLines.length - 3)));
+      renderDiagnosticText(prevLine, runtime.diagCurrentLine);
+      if (runtime.diagIndex >= state.diagnosticText.length) {
+        runtime.diagDone = true;
+        completeDiagnostic();
+      }
+    }
+
+    function computeWpm(correctChars, elapsedMs) {
+      if (!elapsedMs || elapsedMs <= 0) return 0;
+      return (correctChars / 5) / (elapsedMs / 60000);
+    }
+
+    function completeDiagnostic() {
+      const total = state.keystrokes.length;
+      const correct = state.keystrokes.filter(k => k.correct).length;
+      const elapsed = state.keystrokes.length ? (state.keystrokes[state.keystrokes.length - 1].t - state.startTime) : 0;
+      const wpm = computeWpm(correct, elapsed);
+      const acc = total ? (correct / total) * 100 : 100;
+
+      const slowKeys = Object.entries(state.stats.keySpeed)
+        .map(([k, v]) => ({ k, ms: avgFromMetric(v) }))
+        .sort((a, b) => b.ms - a.ms)
+        .slice(0, 5);
+      const slowBigrams = Object.entries(state.stats.bigramSpeed)
+        .map(([k, v]) => ({ k, ms: avgFromMetric(v) }))
+        .sort((a, b) => b.ms - a.ms)
+        .slice(0, 5);
+
+      const instability = runtime.rhythmSpikes > 8 ? "Unstable" : runtime.rhythmSpikes > 3 ? "Moderate" : "Stable";
+      state.results = { wpm, accuracy: acc, slowKeys, slowBigrams, rhythmSpikes: runtime.rhythmSpikes, instability };
+
+      const record = {
+        date: new Date().toISOString(),
+        type: "diagnostic",
+        wpm,
+        accuracy: acc,
+        rhythmSpikes: runtime.rhythmSpikes
+      };
+      state.stats.sessions.push(record);
+      saveSessionHistory(record);
+
+      renderResults();
+      switchPhase("results");
+      saveState();
+    }
+
+    function renderResults() {
+      ui.resWpm.textContent = state.results.wpm ? state.results.wpm.toFixed(1) : "0";
+      ui.resAcc.textContent = state.results.accuracy ? `${state.results.accuracy.toFixed(1)}%` : "0%";
+      ui.resRhythm.textContent = `${state.results.instability || "Stable"} (${state.results.rhythmSpikes || 0} spikes)`;
+
+      ui.slowKeys.innerHTML = "";
+      (state.results.slowKeys || []).forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.k.toUpperCase()} - ${item.ms.toFixed(0)}ms`;
+        ui.slowKeys.appendChild(li);
+      });
+      if (!ui.slowKeys.children.length) ui.slowKeys.innerHTML = "<li>No data</li>";
+
+      ui.slowBigrams.innerHTML = "";
+      (state.results.slowBigrams || []).forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.k} - ${item.ms.toFixed(0)}ms`;
+        ui.slowBigrams.appendChild(li);
+      });
+      if (!ui.slowBigrams.children.length) ui.slowBigrams.innerHTML = "<li>No data</li>";
+
+      renderKeyboardHeatmap();
+    }
+
+    function colorForMs(ms) {
+      if (ms === null || ms === undefined) return "#192338";
+      if (ms < 160) return "#1f6f46";
+      if (ms < 260) return "#6a5e1a";
+      return "#742a2a";
+    }
+
+    function renderKeyboardHeatmap() {
+      ui.keyboardMap.innerHTML = "";
+      const letters = keyboardRows.join("").split("");
+      letters.forEach(ch => {
+        const ms = meanMetric(state.stats.keySpeed, ch);
+        const el = document.createElement("div");
+        el.className = "key";
+        el.style.background = colorForMs(ms);
+        el.textContent = ch.toUpperCase();
+        el.title = ms ? `${ms.toFixed(0)}ms average` : "No data";
+        ui.keyboardMap.appendChild(el);
+      });
+    }
+
+    function buildWeightedWordPool() {
+      const weakKeys = (state.results.slowKeys || []).map(x => x.k);
+      const weakBigrams = (state.results.slowBigrams || []).map(x => x.k);
+      const weighted = [];
+      for (const w of wordList) {
+        let score = 1;
+        for (const k of weakKeys) if (w.includes(k)) score += 2.5;
+        for (const b of weakBigrams) if (w.includes(b)) score += 3.5;
+        if (score < 1) score = 1;
+        const copies = Math.round(score * 2);
+        for (let i = 0; i < copies; i++) weighted.push(w);
+      }
+      return weighted.length ? weighted : wordList.slice();
+    }
+
+    function generateDrillText() {
+      const pool = buildWeightedWordPool();
+      const sentenceCount = 6;
+      const result = [];
+      for (let s = 0; s < sentenceCount; s++) {
+        const len = 8 + Math.floor(Math.random() * 5);
+        const words = [];
+        for (let i = 0; i < len; i++) {
+          words.push(pool[Math.floor(Math.random() * pool.length)]);
+        }
+        let sentence = words.join(" ");
+        sentence = sentence[0].toUpperCase() + sentence.slice(1) + ".";
+        result.push(sentence);
+      }
+      return result.join(" ");
+    }
+
+    function startDrills() {
+      runtime.drillText = generateDrillText();
+      runtime.drillIndex = 0;
+      runtime.drillStart = null;
+      runtime.drillCorrect = 0;
+      runtime.drillTotal = 0;
+      state.sessionProgress = 0;
+      ui.drillInput.value = "";
+      renderTargetText(ui.drillText, runtime.drillText, runtime.drillIndex, new Set());
+      updateDrillStats();
+      switchPhase("drills");
+      setTimeout(() => ui.drillInput.focus(), 0);
+    }
+
+    function updateDrillStats() {
+      const elapsed = runtime.drillStart ? (now() - runtime.drillStart) : 0;
+      const wpm = computeWpm(runtime.drillCorrect, elapsed);
+      const acc = runtime.drillTotal ? (runtime.drillCorrect / runtime.drillTotal) * 100 : 100;
+      ui.drillWpm.textContent = wpm.toFixed(1);
+      ui.drillAcc.textContent = `${acc.toFixed(1)}%`;
+      ui.drillChars.textContent = `${state.sessionProgress} / ${state.sessionTarget}`;
+      const pct = Math.min(100, (state.sessionProgress / state.sessionTarget) * 100);
+      ui.progressBar.style.width = `${pct}%`;
+    }
+
+    function handleDrillKeydown(e) {
+      if (state.phase !== "drills") return;
+      if (e.key === "Tab" || e.key === "Alt" || e.key === "Shift" || e.key === "Control" || e.key === "Meta") return;
+      if (e.key === "Backspace") return;
+      if (e.key.length !== 1) return;
+      e.preventDefault();
+
+      if (!runtime.drillText[runtime.drillIndex]) return;
+      if (!runtime.drillStart) runtime.drillStart = now();
+      runtime.drillTotal += 1;
+      const expected = runtime.drillText[runtime.drillIndex];
+      const ok = e.key === expected;
+
+      if (ok) {
+        runtime.drillCorrect += 1;
+        runtime.drillIndex += 1;
+        state.sessionProgress += 1;
+      }
+
+      renderTargetText(ui.drillText, runtime.drillText, runtime.drillIndex, new Set());
+      updateDrillStats();
+
+      if (runtime.drillIndex >= runtime.drillText.length) {
+        runtime.drillText = generateDrillText();
+        runtime.drillIndex = 0;
+        renderTargetText(ui.drillText, runtime.drillText, runtime.drillIndex, new Set());
+      }
+
+      if (state.sessionProgress >= state.sessionTarget) {
+        completeDrillSession();
+      }
+    }
+
+    function completeDrillSession() {
+      const elapsed = runtime.drillStart ? now() - runtime.drillStart : 0;
+      const wpm = computeWpm(runtime.drillCorrect, elapsed);
+      const acc = runtime.drillTotal ? (runtime.drillCorrect / runtime.drillTotal) * 100 : 100;
+      const record = {
+        date: new Date().toISOString(),
+        type: "drill",
+        wpm,
+        accuracy: acc,
+        correctChars: runtime.drillCorrect
+      };
+      state.stats.sessions.push(record);
+      saveSessionHistory(record);
+      alert(`Session complete!\nWPM: ${wpm.toFixed(1)}\nAccuracy: ${acc.toFixed(1)}%`);
+      renderResults();
+      switchPhase("results");
+      saveState();
+    }
+
+    function saveState() {
+      const safe = {
+        phase: state.phase,
+        diagnosticText: state.diagnosticText,
+        results: state.results,
+        stats: state.stats,
+        sessionProgress: state.sessionProgress,
+        sessionTarget: state.sessionTarget
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (saved.results) state.results = saved.results;
+        if (saved.stats) state.stats = saved.stats;
+      } catch (_) {}
+    }
+
+    function saveSessionHistory(record) {
+      let hist = { sessions: [], wpmHistory: [], accuracyHistory: [], weakKeys: [], bestWpm: 0 };
+      try {
+        hist = JSON.parse(localStorage.getItem(HISTORY_KEY)) || hist;
+      } catch (_) {}
+      hist.sessions.push(record);
+      hist.wpmHistory.push({ date: record.date, wpm: record.wpm });
+      hist.accuracyHistory.push({ date: record.date, accuracy: record.accuracy });
+      hist.weakKeys = (state.results.slowKeys || []).map(x => x.k);
+      hist.bestWpm = Math.max(hist.bestWpm || 0, record.wpm || 0);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+      saveState();
+    }
+
+    function bind() {
+      document.addEventListener("keydown", handleDiagnosticKeydown);
+      ui.drillInput.addEventListener("keydown", handleDrillKeydown);
+      ui.startDrillsBtn.addEventListener("click", startDrills);
+      ui.exitBtn.addEventListener("click", () => {
+        window.close();
+        setTimeout(() => { location.href = "about:blank"; }, 100);
+      });
+      ui.gotItBtn.addEventListener("click", () => showScreen("onboardingScreen"));
+      ui.levelCards.forEach(card => {
+        card.addEventListener("click", () => {
+          localStorage.setItem(LEVEL_KEY, card.dataset.level || "");
+          switchPhase("diagnostic");
+        });
+      });
+      window.addEventListener("resize", () => {
+        if (state.phase === "diagnostic" && activeScreenId === "diagnosticPhase") {
+          const prev = runtime.diagCurrentLine;
+          buildDiagnosticLines();
+          runtime.diagCurrentLine = Math.max(0, Math.min(prev, Math.max(0, runtime.diagLines.length - 3)));
+          renderDiagnosticText(runtime.diagCurrentLine, runtime.diagCurrentLine);
+        }
+      });
+    }
+
+    function init() {
+      loadState();
+      bind();
+      resetDiagnostic();
+      if (state.results && Object.keys(state.results).length) {
+        renderResults();
+      }
+      ui.mainHeader.classList.add("hidden");
+      ui.onboardingScreen.classList.add("hidden");
+      ui.diagnosticPhase.classList.add("hidden");
+      ui.resultsPhase.classList.add("hidden");
+      ui.drillsPhase.classList.add("hidden");
+      ui.welcomeScreen.classList.remove("hidden");
+      activeScreenId = "welcomeScreen";
+      state.phase = "welcome";
+    }
+
+    init();
+  </script>
+</body>
+</html>
