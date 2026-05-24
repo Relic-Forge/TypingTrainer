@@ -21,8 +21,6 @@
       --bad: #d34545;
       --border: #d6deea;
       --screen-slide: 300px;
-      --display-scale: 1;
-      --app-scale: 1;
     }
     * { box-sizing: border-box; }
     html {
@@ -38,15 +36,14 @@
       overflow: hidden;
     }
     .app {
-      width: calc(100vw * var(--display-scale));
-      height: calc(100vh * var(--display-scale));
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       background: #eff1f4;
-      transform: scale(var(--app-scale));
-      transform-origin: top left;
     }
     .app.shell-hidden .app-topbar,
     .app.shell-hidden .app-nav {
@@ -844,6 +841,59 @@
         font-size: 30px;
       }
     }
+    @media (max-height: 760px) and (min-width: 921px) {
+      .app-topbar {
+        height: 58px;
+        flex-basis: 58px;
+        padding: 0 24px;
+      }
+      .icon-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 32px;
+      }
+      .top-title {
+        font-size: 24px;
+      }
+      .top-status {
+        font-size: 22px;
+      }
+      .app-main {
+        padding: 18px clamp(18px, 5vw, 76px);
+      }
+      .home-blocks {
+        min-height: min(430px, 76%);
+        column-gap: clamp(36px, 11vw, 180px);
+      }
+      .recommend-label {
+        font-size: 22px;
+        margin-bottom: 10px;
+      }
+      .block-wrap:not(.recommended)::before {
+        margin-bottom: 10px;
+        font-size: 22px;
+      }
+      .block-card {
+        min-height: clamp(160px, 23vh, 220px);
+        border-radius: 26px;
+        padding: 22px 28px;
+      }
+      .block-title {
+        font-size: clamp(30px, 3vw, 42px);
+      }
+      .block-subtitle {
+        font-size: clamp(25px, 2.7vw, 36px);
+      }
+      .app-nav {
+        height: 74px;
+        flex-basis: 74px;
+        padding: 10px clamp(18px, 5vw, 76px);
+      }
+      .nav-btn {
+        min-height: 50px;
+        font-size: clamp(22px, 2.2vw, 32px);
+      }
+    }
   </style>
 </head>
 <body>
@@ -1120,22 +1170,67 @@
       "zxcvbnm"
     ];
 
-    const wordList = [
-      "focus","logic","smooth","signal","timing","typing","method","rhythm","keyboard","pattern",
-      "repeat","control","motion","spelling","correct","steady","stream","skill","debug","clarity",
-      "gentle","rapid","window","memory","pause","error","letter","lesson","simple","adaptive",
-      "practice","insight","review","improve","change","growth","measure","report","drill","stable",
-      "energy","accuracy","speed","process","session","train","habit","result","visual","analysis"
+    const PARAGRAPH_THEMES = [
+      {
+        setting: ["practice block", "typing lesson", "review session", "focused drill"],
+        actor: ["the learner", "the student", "the typist", "the writer"],
+        verb: ["reviews", "practices", "checks", "repeats", "studies", "solves", "improves", "targets"],
+        object: ["the tricky pattern", "the slow transition", "the difficult movement", "the next exercise", "the useful prompt"],
+        method: ["with steady timing", "with calm control", "without rushing", "with careful accuracy", "before adding speed"],
+        result: ["the rhythm feels smoother", "the next line feels easier", "the weak spot becomes clearer", "the hands stay relaxed"]
+      },
+      {
+        setting: ["writing workshop", "quiet study room", "classroom exercise", "daily journal"],
+        actor: ["the writer", "the student", "the learner", "the class"],
+        verb: ["drafts", "edits", "reviews", "rewrites", "explains", "finishes", "checks"],
+        object: ["the short paragraph", "the clear example", "the exact answer", "the next question", "the final sentence"],
+        method: ["with focused attention", "with a relaxed pace", "without losing the idea", "before the final review"],
+        result: ["the paragraph stays clear", "the message sounds natural", "the answer becomes easier", "the idea remains connected"]
+      },
+      {
+        setting: ["team project", "design review", "planning meeting", "shared workspace"],
+        actor: ["the team", "the mentor", "the coach", "the group"],
+        verb: ["compares", "chooses", "explains", "questions", "adjusts", "organizes", "reviews"],
+        object: ["the next task", "the quality goal", "the quick example", "the exact plan", "the useful sequence"],
+        method: ["with clear notes", "with patient feedback", "without confusion", "before the next step"],
+        result: ["the plan feels organized", "the work moves forward", "the goal stays visible", "the next choice feels simple"]
+      }
+    ];
+
+    const TARGET_WORDS = [
+      "accurate","awkward","balanced","careful","challenge","clear","coach","complex","control","correct",
+      "daily","difficult","exact","example","exercise","expert","explain","extra","feedback","focused",
+      "gentle","habit","improve","judge","keyboard","lesson","memory","method","natural","paragraph",
+      "pattern","practice","precise","quality","question","quick","quiet","quiz","relaxed","repeat",
+      "review","rhythm","sequence","signal","smooth","steady","student","syntax","target","typing",
+      "useful","visual","writer","zebra","zesty","zippy","cozy","dizzy","lazy","hazy"
+    ];
+
+    const SENTENCE_BUILDERS = [
+      (parts) => `${parts.connector} in the ${parts.setting}, ${parts.actor} ${parts.verb} ${parts.object} ${parts.method}.`,
+      (parts) => `${parts.connector} ${parts.actor} uses ${parts.targetPhrase} while ${parts.actorPronoun} ${parts.verb} ${parts.object}.`,
+      (parts) => `${parts.connector} ${parts.object} includes ${parts.targetPhrase}, so ${parts.result}.`,
+      (parts) => `${parts.connector} ${parts.actor} keeps ${parts.targetPhrase} in the prompt and works ${parts.method}.`,
+      (parts) => `${parts.connector} after the ${parts.setting}, ${parts.actor} notices that ${parts.result}.`
     ];
 
     function now() {
       return performance.now();
     }
 
-    function updateDisplayScale() {
-      const scale = Math.max(1, window.devicePixelRatio || 1);
-      document.documentElement.style.setProperty("--display-scale", String(scale));
-      document.documentElement.style.setProperty("--app-scale", String(1 / scale));
+    function refreshActiveTypingLayout() {
+      if (state.phase === "diagnostic" && activeScreenId === "diagnosticPhase") {
+        const prev = runtime.diagCurrentLine;
+        buildDiagnosticLines();
+        runtime.diagCurrentLine = Math.max(0, Math.min(prev, Math.max(0, runtime.diagLines.length - 3)));
+        renderDiagnosticText(runtime.diagCurrentLine, runtime.diagCurrentLine);
+      }
+      if (state.phase === "drills" && activeScreenId === "drillsPhase") {
+        const prev = runtime.drillCurrentLine;
+        buildDrillLines();
+        runtime.drillCurrentLine = Math.max(0, Math.min(prev, Math.max(0, runtime.drillLines.length - 3)));
+        renderDrillText(runtime.drillCurrentLine, runtime.drillCurrentLine);
+      }
     }
 
     function toLetter(ch) {
@@ -1781,51 +1876,149 @@
       ui.secondaryBlockSubtitle.textContent = formatBlockItems(state.homeBlocks.secondary.items);
     }
 
-    function buildWeightedWordPool(blockType = "mixed") {
-      const slowKeys = getSlowKeys(5).map(x => x.k);
-      const slowBigrams = getSlowBigrams(5).map(x => x.k);
-      const weighted = [];
-      for (const w of wordList) {
-        let score = 1;
-        if (blockType !== "bigrams") {
-          for (const k of slowKeys) if (w.includes(k)) score += 2.5;
-        }
-        if (blockType !== "keys") {
-          for (const b of slowBigrams) if (w.includes(b)) score += 4;
-        }
-        if (score < 1) score = 1;
-        const copies = Math.round(score * 2);
-        for (let i = 0; i < copies; i++) weighted.push(w);
+    function countOccurrences(text, fragment) {
+      if (!fragment) return 0;
+      let count = 0;
+      let from = 0;
+      while (from < text.length) {
+        const found = text.indexOf(fragment, from);
+        if (found === -1) break;
+        count += 1;
+        from = found + 1;
       }
-      return weighted.length ? weighted : wordList.slice();
+      return count;
     }
 
-    function focusedFragments(blockType) {
-      const items = blockType === "bigrams" ? getSlowBigrams(5) : getSlowKeys(5);
-      return items.map(item => item.k).filter(Boolean);
+    function getFocusTargets(blockType = "mixed") {
+      const targets = [];
+      if (blockType !== "bigrams") {
+        getSlowKeys(5).forEach((item, index) => {
+          targets.push({
+            value: item.k,
+            type: "key",
+            weight: 2.2 + Math.max(0, 5 - index) * 0.35 + (item.errors || 0) * 0.7
+          });
+        });
+      }
+      if (blockType !== "keys") {
+        getSlowBigrams(5).forEach((item, index) => {
+          targets.push({
+            value: item.k,
+            type: "bigram",
+            weight: 4.8 + Math.max(0, 5 - index) * 0.55
+          });
+        });
+      }
+      return targets.filter(target => target.value);
+    }
+
+    function scoreTextForTargets(text, targets) {
+      const normalized = text.toLowerCase();
+      return targets.reduce((score, target) => {
+        const hits = countOccurrences(normalized, target.value);
+        if (!hits) return score;
+        const repeatPenalty = hits > 3 ? (hits - 3) * target.weight * 0.35 : 0;
+        return score + hits * target.weight - repeatPenalty;
+      }, 0);
+    }
+
+    function chooseWeighted(items, weightFn) {
+      const weighted = items.map(item => ({ item, weight: Math.max(0.1, weightFn(item)) }));
+      const total = weighted.reduce((sum, entry) => sum + entry.weight, 0);
+      let pick = Math.random() * total;
+      for (const entry of weighted) {
+        pick -= entry.weight;
+        if (pick <= 0) return entry.item;
+      }
+      return weighted[weighted.length - 1].item;
+    }
+
+    function sample(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function capitalizeSentence(text) {
+      const trimmed = text.replace(/\s+/g, " ").trim();
+      return `${trimmed[0].toUpperCase()}${trimmed.slice(1)}`;
+    }
+
+    function chooseTargetWord(targets, forcedTarget) {
+      const activeTargets = forcedTarget ? [forcedTarget] : targets;
+      const matches = TARGET_WORDS.filter(word => {
+        const normalized = word.toLowerCase();
+        return activeTargets.some(target => normalized.includes(target.value));
+      });
+      const pool = matches.length ? matches : TARGET_WORDS;
+      return chooseWeighted(pool, word => 1 + scoreTextForTargets(word, activeTargets) * 2.4);
+    }
+
+    function buildTargetPhrase(targets, forcedTarget) {
+      const primary = chooseTargetWord(targets, forcedTarget);
+      const secondary = chooseTargetWord(targets, null);
+      if (primary === secondary) return `words like ${primary}`;
+      return `words like ${primary} and ${secondary}`;
+    }
+
+    function buildGeneratedSentence(theme, targets, index, forcedTarget) {
+      const connectors = ["first,", "next,", "then,", "after that,", "finally,", "for review,"];
+      const actor = sample(theme.actor);
+      const parts = {
+        connector: connectors[index % connectors.length],
+        setting: sample(theme.setting),
+        actor,
+        actorPronoun: "the learner",
+        verb: sample(theme.verb),
+        object: sample(theme.object),
+        method: sample(theme.method),
+        result: sample(theme.result),
+        targetPhrase: buildTargetPhrase(targets, forcedTarget)
+      };
+      const builder = SENTENCE_BUILDERS[index % SENTENCE_BUILDERS.length];
+      return capitalizeSentence(builder(parts));
+    }
+
+    function buildGeneratedCandidates(theme, targets, index, forcedTarget) {
+      const candidates = [];
+      for (let i = 0; i < 18; i++) {
+        const text = buildGeneratedSentence(theme, targets, index, forcedTarget);
+        candidates.push({
+          text,
+          score: scoreTextForTargets(text, targets)
+        });
+      }
+      return candidates;
     }
 
     function generateDrillText(blockType = state.activeBlockType || "mixed") {
-      const pool = buildWeightedWordPool(blockType);
-      const fragments = focusedFragments(blockType);
+      const targets = getFocusTargets(blockType);
       const sentenceCount = 6;
       const result = [];
-      for (let s = 0; s < sentenceCount; s++) {
-        const len = 8 + Math.floor(Math.random() * 5);
-        const words = [];
-        for (let i = 0; i < len; i++) {
-          if (fragments.length && Math.random() < 0.28) {
-            const fragment = fragments[Math.floor(Math.random() * fragments.length)];
-            const matches = pool.filter(word => word.includes(fragment));
-            words.push((matches.length ? matches : pool)[Math.floor(Math.random() * (matches.length ? matches.length : pool.length))]);
-          } else {
-            words.push(pool[Math.floor(Math.random() * pool.length)]);
-          }
-        }
-        let sentence = words.join(" ");
-        sentence = sentence[0].toUpperCase() + sentence.slice(1) + ".";
-        result.push(sentence);
+      const used = new Set();
+      const theme = sample(PARAGRAPH_THEMES);
+
+      for (let i = 0; i < sentenceCount; i++) {
+        const forcedTarget = targets.length ? targets[i % targets.length] : null;
+        const candidates = buildGeneratedCandidates(theme, targets, i, forcedTarget);
+        const pool = candidates.filter(candidate => !used.has(candidate.text));
+        const available = pool.length ? pool : candidates;
+        const selected = targets.length
+          ? chooseWeighted(available, candidate => 1 + candidate.score * 3)
+          : available[Math.floor(Math.random() * available.length)];
+        result.push(selected.text);
+        used.add(selected.text);
       }
+
+      const text = result.join(" ");
+      const missingTargets = targets
+        .filter(target => countOccurrences(text.toLowerCase(), target.value) === 0)
+        .slice(0, 2);
+      missingTargets.forEach(target => {
+        const targeted = buildGeneratedCandidates(theme, [target], result.length, target)
+          .sort((a, b) => b.score - a.score)
+          .find(candidate => !used.has(candidate.text));
+        if (targeted) result.push(targeted.text);
+      });
+
       return result.join(" ");
     }
 
@@ -2002,22 +2195,10 @@
         });
       });
       window.addEventListener("resize", () => {
-        updateDisplayScale();
-        if (state.phase === "diagnostic" && activeScreenId === "diagnosticPhase") {
-          const prev = runtime.diagCurrentLine;
-          buildDiagnosticLines();
-          runtime.diagCurrentLine = Math.max(0, Math.min(prev, Math.max(0, runtime.diagLines.length - 3)));
-          renderDiagnosticText(runtime.diagCurrentLine, runtime.diagCurrentLine);
-        }
-        if (state.phase === "drills" && activeScreenId === "drillsPhase") {
-          const prev = runtime.drillCurrentLine;
-          buildDrillLines();
-          runtime.drillCurrentLine = Math.max(0, Math.min(prev, Math.max(0, runtime.drillLines.length - 3)));
-          renderDrillText(runtime.drillCurrentLine, runtime.drillCurrentLine);
-        }
+        refreshActiveTypingLayout();
       });
       if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", updateDisplayScale);
+        window.visualViewport.addEventListener("resize", refreshActiveTypingLayout);
       }
     }
 
@@ -2055,7 +2236,7 @@
     }
 
     function init() {
-      updateDisplayScale();
+      refreshActiveTypingLayout();
       loadState();
       pruneInvalidBigrams();
       if (state.results && Object.keys(state.results).length) {
