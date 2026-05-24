@@ -48,12 +48,16 @@ Update the typing trainer UI and navigation so it matches the homepage direction
 - Avoid layout choices that push content below the fold.
 - Only use internal scrolling if absolutely necessary, and not on the main Home/results experience.
 
-### 4. Placeholder screens
-- Focus Points, Statistics, and Settings are not fully designed yet.
-- Implement simple temporary versions that are clean and usable.
-- They should use the same app shell/top/bottom navigation style.
-- Do not overbuild them.
-- Settings should open from the gear icon in the top-left.
+### 4. Secondary screens
+- Focus Points and Statistics currently remain simple placeholder screens.
+- Settings is now a designed full-screen overlay opened from the gear icon in
+  the top-left.
+- Settings should remain responsive across desktop, short-height desktop, and
+  mobile viewports.
+- The settings overlay should keep the previous screen visible as a blurred
+  underlay while the settings panel animates in.
+- Do not reintroduce page-level scrolling or edge gaps around the settings
+  overlay during transitions.
 
 ### 5. Preserve existing trainer functionality
 - Do not break typing block selection.
@@ -81,7 +85,11 @@ Update the typing trainer UI and navigation so it matches the homepage direction
 - Results screen has exactly one “Back to Home” button.
 - Clicking “Back to Home” returns to the Home screen from the screenshot direction.
 - Bottom nav switches between Home, Focus Points, and Statistics.
-- Gear icon opens the temporary Settings screen/menu.
+- Gear icon opens the Settings overlay.
+- Settings provides General, Appearance, and Data sections.
+- Live WPM and Accuracy toggles affect the typing block metric cards.
+- Keyboard layout uses the custom animated dropdown.
+- Dark mode toggles the app theme and persists in localStorage.
 - Fullscreen view does not require page scrolling.
 - No regression to scoring, block selection, or typing behavior.
 
