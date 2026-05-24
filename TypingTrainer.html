@@ -6,25 +6,28 @@
   <title>Typing Trainer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0f1218;
-      --panel: #161b24;
-      --text: #e8edf5;
-      --muted: #a8b2c5;
-      --accent: #3f8cff;
-      --ok: #2fbf71;
-      --warn: #e7b416;
-      --bad: #e15252;
-      --border: #273043;
+      --ui-font: "Inter", "Segoe UI", Tahoma, sans-serif;
+      --typing-font: "Roboto Mono", Consolas, monospace;
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --text: #152238;
+      --muted: #6b7890;
+      --accent: #2f71d8;
+      --ok: #1f9f58;
+      --warn: #c59a12;
+      --bad: #d34545;
+      --border: #d6deea;
+      --screen-slide: 300px;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: radial-gradient(1200px 500px at 10% -10%, #1f2738 0%, var(--bg) 50%);
+      background: radial-gradient(1200px 500px at 10% -10%, #ffffff 0%, var(--bg) 58%);
       color: var(--text);
-      font-family: "Inter", "Segoe UI", Tahoma, sans-serif;
+      font-family: var(--ui-font);
       min-height: 100vh;
     }
     .app {
@@ -38,22 +41,33 @@
     .screen {
       width: 100%;
     }
+    .screen.transitioning {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      width: calc(100% - 40px);
+      margin-bottom: 0;
+      will-change: opacity, transform;
+    }
     .slide-enter {
-      animation: slideInLeft 320ms ease forwards;
+      animation: screenEnter 300ms cubic-bezier(0.22, 0.8, 0.22, 1) forwards;
+      z-index: 2;
     }
     .slide-exit {
-      animation: slideOutLeft 320ms ease forwards;
+      animation: screenExit 300ms cubic-bezier(0.22, 0.8, 0.22, 1) forwards;
+      z-index: 1;
     }
-    @keyframes slideInLeft {
-      from { opacity: 0.9; transform: translateX(40px); }
+    @keyframes screenEnter {
+      from { opacity: 0; transform: translateX(var(--screen-slide)); }
       to { opacity: 1; transform: translateX(0); }
     }
-    @keyframes slideOutLeft {
+    @keyframes screenExit {
       from { opacity: 1; transform: translateX(0); }
-      to { opacity: 0.88; transform: translateX(-40px); }
+      to { opacity: 0; transform: translateX(calc(var(--screen-slide) * -1)); }
     }
     .panel {
-      background: linear-gradient(180deg, #192131, var(--panel));
+      background: linear-gradient(180deg, #ffffff, #fbfcff);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 18px;
@@ -67,7 +81,7 @@
       margin-top: 14px;
       padding: 14px;
       border-radius: 10px;
-      background: #0f1522;
+      background: #f8fbff;
       border: 1px solid var(--border);
       font-size: 20px;
       line-height: 1.7;
@@ -75,12 +89,26 @@
       user-select: none;
       min-height: 160px;
     }
-    .typing-box.diagnostic-typing {
-      font-family: "Roboto Mono", Consolas, monospace;
+    .typing-box.diagnostic-typing,
+    .typing-box.drill-typing {
+      font-family: var(--typing-font);
       line-height: 1.7;
       height: calc(1.7em * 3 + 28px);
       overflow: hidden;
       position: relative;
+    }
+    .app,
+    .panel,
+    .kpi,
+    h1,
+    h2,
+    h3,
+    p,
+    ul,
+    li,
+    button,
+    button * {
+      font-family: var(--ui-font);
     }
     .diag-track {
       display: flex;
@@ -93,45 +121,38 @@
       min-height: 1.7em;
       white-space: pre;
     }
-    .char { color: #8c97ad; }
+    .char { color: #6f7f98; }
     .char.done.ok { color: var(--ok); }
     .char.done.bad { color: var(--bad); }
     .char.current {
       color: var(--text);
-      background: #273654;
+      background: #dbe9ff;
       border-radius: 4px;
       padding: 0 1px;
       text-decoration: underline;
       text-underline-offset: 3px;
     }
-    .input-row {
-      margin-top: 14px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    .input-row input[type="text"] {
-      width: 100%;
-      background: #0d1420;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 18px;
-      outline: none;
+    .char.current.bad {
+      color: var(--bad);
+      background: #ffe1e1;
     }
     button {
-      background: #233a66;
+      appearance: none;
+      -webkit-appearance: none;
+      background: #eaf1ff;
       color: var(--text);
-      border: 1px solid #35528c;
+      border: 1px solid #bfcde6;
       border-radius: 10px;
       padding: 10px 14px;
       cursor: pointer;
+      font-family: var(--ui-font) !important;
+      font-weight: 400;
+      line-height: 1.2;
       transition: transform 130ms ease, background 130ms ease;
     }
-    button:hover { background: #2d4a82; transform: translateY(-1px); }
+    button:hover { background: #dce8ff; transform: translateY(-1px); }
     button.secondary {
-      background: #1c2638;
+      background: #f4f7ff;
       border-color: var(--border);
     }
     .grid {
@@ -142,7 +163,7 @@
     .kpi {
       border: 1px solid var(--border);
       border-radius: 10px;
-      background: #0f1522;
+      background: #f8fbff;
       padding: 12px;
     }
     .kpi .v { font-size: 26px; font-weight: 700; }
@@ -156,8 +177,8 @@
     .key {
       text-align: center;
       border-radius: 8px;
-      border: 1px solid #1f2c44;
-      background: #111a2a;
+      border: 1px solid #c8d5ec;
+      background: #edf3ff;
       padding: 8px 2px;
       font-size: 12px;
       color: #d9e2f3;
@@ -165,7 +186,7 @@
     .progress-wrap {
       width: 100%;
       height: 14px;
-      background: #0f1522;
+      background: #f1f6ff;
       border: 1px solid var(--border);
       border-radius: 999px;
       overflow: hidden;
@@ -173,7 +194,7 @@
     .progress {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #2b73e0, #47d2a3);
+      background: linear-gradient(90deg, #2f71d8, #33b173);
       transition: width 160ms ease;
     }
     .fade-in { animation: fade 220ms ease; }
@@ -199,7 +220,7 @@
       max-width: 780px;
       font-size: 28px;
       line-height: 1.35;
-      color: #e1e8f4;
+      color: #2b3a52;
       margin: 0;
     }
     .welcome-actions {
@@ -212,6 +233,7 @@
       background: #d36d6d;
       border-color: #e58a8a;
       color: #170909;
+      font-family: var(--ui-font) !important;
       min-width: 126px;
       font-size: 28px;
       padding: 12px 16px;
@@ -220,6 +242,7 @@
       background: #8fca8f;
       border-color: #a5d9a5;
       color: #0e240e;
+      font-family: var(--ui-font) !important;
       min-width: 126px;
       font-size: 28px;
       padding: 12px 16px;
@@ -238,15 +261,16 @@
       font-weight: 400;
     }
     .onboarding-sub {
-      margin-top: 18px;
-      font-size: 56px;
-      font-style: italic;
-      color: #f1f5fc;
+      margin-top: 14px;
+      font-size: 24px;
+      font-style: normal;
+      color: #2b3a52;
+      letter-spacing: 0.01em;
     }
     .onboarding-sep {
       width: 100%;
       height: 1px;
-      background: #2b3447;
+      background: #d9e1ef;
       margin: 24px 0 28px;
     }
     .onboarding-grid {
@@ -256,20 +280,21 @@
       gap: 18px;
     }
     .level-card {
-      border: 2px solid #344158;
-      background: #121a29;
+      border: 2px solid #c5d2e7;
+      background: #ffffff;
       color: var(--text);
       border-radius: 18px;
       padding: 18px;
       min-height: 200px;
       text-align: left;
+      font-family: var(--ui-font) !important;
       transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
       cursor: pointer;
     }
     .level-card:hover {
       transform: translateY(-2px);
-      border-color: #4c6aa0;
-      background: #17243a;
+      border-color: #8faadb;
+      background: #f5f9ff;
     }
     .bars {
       display: inline-flex;
@@ -281,7 +306,7 @@
     .bars span {
       width: 12px;
       border-radius: 3px;
-      border: 1px solid #9ba5b7;
+      border: 1px solid #98a8c5;
       background: transparent;
       display: inline-block;
     }
@@ -290,9 +315,10 @@
     .bars .h2 { height: 27px; }
     .bars .h3 { height: 36px; }
     .level-title {
-      font-size: 34px;
+      font-size: 32px;
       line-height: 1.2;
       margin-top: 8px;
+      overflow-wrap: anywhere;
     }
     .level-range {
       margin-top: 12px;
@@ -300,9 +326,10 @@
       font-size: 28px;
     }
     @media (max-width: 920px) {
+      :root { --screen-slide: 110px; }
       .onboarding-grid { grid-template-columns: 1fr; }
       .onboarding-wrap h2 { font-size: 52px; }
-      .onboarding-sub { font-size: 34px; }
+      .onboarding-sub { font-size: 20px; }
       .welcome-wrap h2 { font-size: 40px; }
       .welcome-wrap p { font-size: 24px; }
     }
@@ -315,8 +342,8 @@
         <h2>Welcome to Typing Trainer!</h2>
         <p>Before we get to know you; understand this is an early version of Typing Trainer, and things may not work. Typing Trainer may crash, and features may not be implemented yet.</p>
         <div class="welcome-actions">
-          <button id="exitBtn" class="btn-exit">Exit</button>
-          <button id="gotItBtn" class="btn-ok">I GOT IT!</button>
+          <button type="button" id="exitBtn" class="btn-exit">Exit</button>
+          <button type="button" id="gotItBtn" class="btn-ok">I GOT IT!</button>
         </div>
       </div>
     </section>
@@ -327,28 +354,21 @@
         <div class="onboarding-sub">What's your current typing level?</div>
         <div class="onboarding-sep"></div>
         <div class="onboarding-grid">
-          <button class="level-card" data-level="little">
+          <button type="button" class="level-card" data-level="under45">
             <div class="bars"><span class="on h1"></span><span class="h2"></span><span class="h3"></span></div>
-            <div class="level-title">Little experience</div>
-            <div class="level-range">(0-39 WPM)</div>
+            <div class="level-title">Under 45 WPM</div>
           </button>
-          <button class="level-card" data-level="some">
+          <button type="button" class="level-card" data-level="45to75">
             <div class="bars"><span class="on h1"></span><span class="on h2"></span><span class="h3"></span></div>
-            <div class="level-title">Some experience</div>
-            <div class="level-range">(40-99 WPM)</div>
+            <div class="level-title">45–75 WPM</div>
           </button>
-          <button class="level-card" data-level="accuracy">
+          <button type="button" class="level-card" data-level="75plus">
             <div class="bars"><span class="on h1"></span><span class="on h2"></span><span class="on h3"></span></div>
-            <div class="level-title">I'm just here to improve accuracy</div>
-            <div class="level-range">(100+ WPM)</div>
+            <div class="level-title">75+ WPM</div>
           </button>
         </div>
       </div>
     </section>
-
-    <div id="mainHeader" class="panel hidden">
-      <h1>Typing Trainer</h1>
-    </div>
 
     <section id="diagnosticPhase" class="screen panel hidden">
       <h2>Diagnostic</h2>
@@ -361,6 +381,7 @@
         <div class="kpi"><div>WPM</div><div id="resWpm" class="v">0</div></div>
         <div class="kpi"><div>Accuracy</div><div id="resAcc" class="v">0%</div></div>
         <div class="kpi"><div>Rhythm</div><div id="resRhythm" class="v">Stable</div></div>
+        <div class="kpi"><div>Sessions</div><div id="resSessions" class="v">0</div></div>
       </div>
       <div class="grid" style="margin-top:10px;">
         <div class="kpi"><h3>Top 5 Slowest Keys</h3><ul id="slowKeys"></ul></div>
@@ -371,7 +392,7 @@
         <div id="keyboardMap" class="keyboard"></div>
       </div>
       <div style="margin-top:12px;">
-        <button id="startDrillsBtn">Start Training Session</button>
+        <button type="button" id="startDrillsBtn">Start Training Session</button>
       </div>
     </section>
 
@@ -384,15 +405,17 @@
       </div>
       <div style="margin:12px 0 8px;">Progress</div>
       <div class="progress-wrap"><div id="progressBar" class="progress"></div></div>
-      <div id="drillText" class="typing-box" style="margin-top:12px;"></div>
-      <div class="input-row">
-        <input id="drillInput" type="text" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Type to train..." />
-      </div>
+      <div id="drillText" class="typing-box drill-typing" style="margin-top:12px;"></div>
     </section>
   </div>
 
   <script>
-    const INTRO_TEXT = "Welcome to Typing Trainer! Typing Trainer is an intelligent program made to help you identify your weak spots in typing, with courses to help fight against these. Typing Trainer includes a personalized typing diagnostic that analyzes real keystroke behavior instead of just speed, tracking timing, accuracy, and rhythm consistency in real time. It provides a detailed performance breakdown after each session, including weak keys, difficult key pairs, and hesitation patterns that affect flow. The system feeds you adaptive practice drills based on your weaknesses, prioritizing problem areas instead of using generic lessons. Understand that Typing Trainer is to help build accuracy (and some speed). Did you know 40% of people type under a 90% accuracy? Let's train and improve!";
+    const DIAGNOSTIC_TEXTS = {
+      under45: "Welcome to Typing Trainer! This program helps you improve your typing with “blocks” that target your weak spots. As you type, Typing Trainer learns which keys and words are difficult and gives you exercises to help you improve step by step. Let’s go!",
+      "45to75": "Welcome to Typing Trainer! Typing Trainer is an intelligent program made to help your weak spots in typing with “blocks” designed around the problems you have most. Instead of only focusing on speed, the program pays attention to timing, consistency, and hesitation while you type. That way, you’re always practicing what actually holds you back instead of repeating generic lessons. Let’s train and improve!",
+      "75plus": "Welcome to Typing Trainer! Typing Trainer is an intelligent program made to help you identify your weak spots in typing, with courses to help fight against these. Instead of only measuring speed and accuracy like other typing programs, Typing Trainer analyzes keystroke behavior, hesitation patterns, and weak key combinations. After each session, you’ll receive a detailed breakdown of your performance along with custom drills focused on your specific weaknesses. Let’s train and improve!"
+    };
+    const INTRO_TEXT = DIAGNOSTIC_TEXTS.under45;
 
     const STORAGE_KEY = "typingTrainerStateV1";
     const HISTORY_KEY = "typingTrainerHistoryV1";
@@ -423,6 +446,10 @@
       diagDone: false,
       drillText: "",
       drillIndex: 0,
+      drillCurrentLine: 0,
+      drillLines: [],
+      drillLineStartIndices: [],
+      drillMistakes: new Set(),
       drillStart: null,
       drillCorrect: 0,
       drillTotal: 0,
@@ -433,7 +460,7 @@
     let activeScreenId = "welcomeScreen";
 
     const ui = {
-      mainHeader: document.getElementById("mainHeader"),
+      app: document.querySelector(".app"),
       welcomeScreen: document.getElementById("welcomeScreen"),
       onboardingScreen: document.getElementById("onboardingScreen"),
       exitBtn: document.getElementById("exitBtn"),
@@ -446,12 +473,12 @@
       resWpm: document.getElementById("resWpm"),
       resAcc: document.getElementById("resAcc"),
       resRhythm: document.getElementById("resRhythm"),
+      resSessions: document.getElementById("resSessions"),
       slowKeys: document.getElementById("slowKeys"),
       slowBigrams: document.getElementById("slowBigrams"),
       keyboardMap: document.getElementById("keyboardMap"),
       startDrillsBtn: document.getElementById("startDrillsBtn"),
       drillText: document.getElementById("drillText"),
-      drillInput: document.getElementById("drillInput"),
       drillWpm: document.getElementById("drillWpm"),
       drillAcc: document.getElementById("drillAcc"),
       drillChars: document.getElementById("drillChars"),
@@ -480,6 +507,22 @@
       return (ch || "").toLowerCase();
     }
 
+    function normalizeTypedChar(ch) {
+      const equivalents = {
+        "\u201c": "\"",
+        "\u201d": "\"",
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u2013": "-",
+        "\u2014": "-"
+      };
+      return equivalents[ch] || ch;
+    }
+
+    function typedCharsMatch(actual, expected) {
+      return normalizeTypedChar(actual) === normalizeTypedChar(expected);
+    }
+
     function ensureMetric(map, key) {
       if (!map[key]) map[key] = { total: 0, count: 0 };
       return map[key];
@@ -505,31 +548,39 @@
       const current = document.getElementById(activeScreenId);
       const next = document.getElementById(targetId);
       if (!next) return;
+      const transitionMs = 300;
+      const nextWasHidden = next.classList.contains("hidden");
+      next.classList.remove("hidden", "slide-exit");
+      const currentHeight = current ? current.offsetHeight : 0;
+      const nextHeight = next.offsetHeight;
+      ui.app.style.minHeight = `${Math.max(ui.app.offsetHeight, currentHeight, nextHeight) + 40}px`;
+      if (nextWasHidden) next.classList.add("hidden");
       if (current) {
-        current.classList.remove("slide-enter");
-        current.classList.add("slide-exit");
+        current.classList.remove("slide-enter", "slide-exit");
+        current.classList.add("transitioning", "slide-exit");
       }
       next.classList.remove("hidden", "slide-exit");
-      next.classList.add("slide-enter");
+      next.classList.add("transitioning", "slide-enter");
       setTimeout(() => {
         if (current) current.classList.add("hidden");
-        if (current) current.classList.remove("slide-exit");
-        next.classList.remove("slide-enter");
-      }, 320);
+        if (current) current.classList.remove("transitioning", "slide-exit");
+        next.classList.remove("transitioning", "slide-enter");
+        ui.app.style.minHeight = "";
+      }, transitionMs);
       activeScreenId = targetId;
     }
 
     function switchPhase(phase) {
       state.phase = phase;
-      ui.mainHeader.classList.remove("hidden");
       if (phase === "diagnostic") {
-        buildDiagnosticLines();
-        runtime.diagCurrentLine = Math.max(0, Math.min(diagnosticIndexToLine(runtime.diagIndex), Math.max(0, runtime.diagLines.length - 3)));
-        renderDiagnosticText(runtime.diagCurrentLine, runtime.diagCurrentLine);
         showScreen("diagnosticPhase");
+        scheduleDiagnosticLayoutRefresh();
       }
       if (phase === "results") showScreen("resultsPhase");
-      if (phase === "drills") showScreen("drillsPhase");
+      if (phase === "drills") {
+        showScreen("drillsPhase");
+        scheduleDrillLayoutRefresh();
+      }
       saveState();
     }
 
@@ -538,6 +589,23 @@
     }
 
     function splitDiagnosticIntoLines(text, width) {
+      const words = text.split(" ");
+      const lines = [];
+      let current = "";
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const next = current ? `${current} ${word}` : word;
+        if (next.length <= width) current = next;
+        else {
+          if (current) lines.push(current);
+          current = word;
+        }
+      }
+      if (current) lines.push(current);
+      return lines;
+    }
+
+    function splitIntoWordLines(text, width) {
       const words = text.split(" ");
       const lines = [];
       let current = "";
@@ -564,9 +632,19 @@
       const capacity = Math.floor(available / charWidth);
       return Math.max(18, capacity);
     }
+    function getLineCapacityFor(container) {
+      const style = getComputedStyle(container);
+      const testCanvas = document.createElement("canvas");
+      const ctx = testCanvas.getContext("2d");
+      ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const charWidth = ctx.measureText("M").width || 10;
+      const available = container.clientWidth - 28;
+      const capacity = Math.floor(available / charWidth);
+      return Math.max(18, capacity);
+    }
 
     function buildDiagnosticLines() {
-      runtime.diagLines = splitDiagnosticIntoLines(state.diagnosticText, getDiagnosticLineCapacity());
+      runtime.diagLines = splitIntoWordLines(state.diagnosticText, getLineCapacityFor(ui.diagnosticText));
       runtime.diagLineStartIndices = [];
       let idx = 0;
       for (let i = 0; i < runtime.diagLines.length; i++) {
@@ -574,6 +652,17 @@
         idx += runtime.diagLines[i].length;
         if (i < runtime.diagLines.length - 1) idx += 1;
       }
+    }
+
+    function refreshDiagnosticLayout() {
+      buildDiagnosticLines();
+      runtime.diagCurrentLine = Math.max(0, Math.min(diagnosticIndexToLine(runtime.diagIndex), Math.max(0, runtime.diagLines.length - 3)));
+      renderDiagnosticText(runtime.diagCurrentLine, runtime.diagCurrentLine);
+    }
+
+    function scheduleDiagnosticLayoutRefresh() {
+      requestAnimationFrame(refreshDiagnosticLayout);
+      setTimeout(refreshDiagnosticLayout, 320);
     }
 
     function diagnosticIndexToLine(index) {
@@ -595,6 +684,7 @@
           let cls = "char";
           if (globalIdx < runtime.diagIndex) cls += runtime.diagMistakes.has(globalIdx) ? " done bad" : " done ok";
           if (globalIdx === runtime.diagIndex) cls += " current";
+          if (globalIdx === runtime.diagIndex && runtime.diagMistakes.has(globalIdx)) cls += " bad";
           const ch = line[j] === " " ? "&nbsp;" : escapeHtml(line[j]);
           lineHtml += `<span class="${cls}">${ch}</span>`;
         }
@@ -619,10 +709,71 @@
         let cls = "char";
         if (i < index) cls += mistakesSet.has(i) ? " done bad" : " done ok";
         if (i === index) cls += " current";
+        if (i === index && mistakesSet.has(i)) cls += " bad";
         const ch = text[i] === " " ? "&nbsp;" : escapeHtml(text[i]);
         out += `<span class="${cls}">${ch}</span>`;
       }
       container.innerHTML = out;
+    }
+
+    function buildDrillLines() {
+      runtime.drillLines = splitIntoWordLines(runtime.drillText, getLineCapacityFor(ui.drillText));
+      runtime.drillLineStartIndices = [];
+      let idx = 0;
+      for (let i = 0; i < runtime.drillLines.length; i++) {
+        runtime.drillLineStartIndices.push(idx);
+        idx += runtime.drillLines[i].length;
+        if (i < runtime.drillLines.length - 1) idx += 1;
+      }
+    }
+
+    function refreshDrillLayout() {
+      buildDrillLines();
+      runtime.drillCurrentLine = Math.max(0, Math.min(drillIndexToLine(runtime.drillIndex), Math.max(0, runtime.drillLines.length - 3)));
+      renderDrillText(runtime.drillCurrentLine, runtime.drillCurrentLine);
+    }
+
+    function scheduleDrillLayoutRefresh() {
+      requestAnimationFrame(refreshDrillLayout);
+      setTimeout(refreshDrillLayout, 320);
+    }
+
+    function drillIndexToLine(index) {
+      for (let i = runtime.drillLineStartIndices.length - 1; i >= 0; i--) {
+        if (index >= runtime.drillLineStartIndices[i]) return i;
+      }
+      return 0;
+    }
+
+    function renderDrillText(baseLine, animateToLine) {
+      const lineHeightPx = parseFloat(getComputedStyle(ui.drillText).lineHeight);
+      const trackParts = [];
+      for (let lineIdx = 0; lineIdx < runtime.drillLines.length; lineIdx++) {
+        const line = runtime.drillLines[lineIdx];
+        const start = runtime.drillLineStartIndices[lineIdx];
+        let lineHtml = "";
+        for (let j = 0; j < line.length; j++) {
+          const globalIdx = start + j;
+          let cls = "char";
+          if (globalIdx < runtime.drillIndex) cls += runtime.drillMistakes.has(globalIdx) ? " done bad" : " done ok";
+          if (globalIdx === runtime.drillIndex) cls += " current";
+          if (globalIdx === runtime.drillIndex && runtime.drillMistakes.has(globalIdx)) cls += " bad";
+          const ch = line[j] === " " ? "&nbsp;" : escapeHtml(line[j]);
+          lineHtml += `<span class="${cls}">${ch}</span>`;
+        }
+        trackParts.push(`<div class="diag-line">${lineHtml}</div>`);
+      }
+      ui.drillText.innerHTML = `<div id="drillTrack" class="diag-track">${trackParts.join("")}</div>`;
+      const track = document.getElementById("drillTrack");
+      const fromLine = typeof baseLine === "number" ? baseLine : runtime.drillCurrentLine;
+      const toLine = typeof animateToLine === "number" ? animateToLine : fromLine;
+      track.style.transition = fromLine !== toLine ? "transform 260ms ease" : "none";
+      track.style.transform = `translateY(-${fromLine * lineHeightPx}px)`;
+      if (fromLine !== toLine) {
+        requestAnimationFrame(() => {
+          track.style.transform = `translateY(-${toLine * lineHeightPx}px)`;
+        });
+      }
     }
 
     function resetDiagnostic() {
@@ -655,6 +806,32 @@
       if (isCorrect) runtime.lastAcceptedChar = key;
     }
 
+    function recordPracticeMetric(expected, actual, isCorrect) {
+      const t = now();
+      const dt = runtime.lastCharTime === null ? 0 : t - runtime.lastCharTime;
+      const key = toLetter(expected);
+      if (isCorrect && key) addMetric(state.stats.keySpeed, key, dt);
+      if (isCorrect && runtime.lastAcceptedChar) addMetric(state.stats.bigramSpeed, `${runtime.lastAcceptedChar}${key}`, dt);
+      if (!isCorrect && key) state.stats.errors[key] = (state.stats.errors[key] || 0) + 1;
+      runtime.lastCharTime = t;
+      if (isCorrect) runtime.lastAcceptedChar = key;
+      return t;
+    }
+
+    function summarizeResults(wpm, accuracy, rhythmSpikes) {
+      const slowKeys = Object.entries(state.stats.keySpeed)
+        .map(([k, v]) => ({ k, ms: avgFromMetric(v) }))
+        .sort((a, b) => b.ms - a.ms)
+        .slice(0, 5);
+      const slowBigrams = Object.entries(state.stats.bigramSpeed)
+        .map(([k, v]) => ({ k, ms: avgFromMetric(v) }))
+        .sort((a, b) => b.ms - a.ms)
+        .slice(0, 5);
+      const spikes = rhythmSpikes || 0;
+      const instability = spikes > 8 ? "Unstable" : spikes > 3 ? "Moderate" : "Stable";
+      return { wpm, accuracy, slowKeys, slowBigrams, rhythmSpikes: spikes, instability };
+    }
+
     function handleDiagnosticKeydown(e) {
       if (state.phase !== "diagnostic" || runtime.diagDone) return;
       if (e.key === "Tab" || e.key === "Alt" || e.key === "Shift" || e.key === "Control" || e.key === "Meta") return;
@@ -665,7 +842,7 @@
       const expected = state.diagnosticText[runtime.diagIndex];
       if (!expected) return;
       const actual = e.key;
-      const isCorrect = actual === expected;
+      const isCorrect = typedCharsMatch(actual, expected);
       recordKeyEvent(expected, actual, isCorrect);
       if (isCorrect) runtime.diagIndex += 1;
       else runtime.diagMistakes.add(runtime.diagIndex);
@@ -692,17 +869,7 @@
       const wpm = computeWpm(correct, elapsed);
       const acc = total ? (correct / total) * 100 : 100;
 
-      const slowKeys = Object.entries(state.stats.keySpeed)
-        .map(([k, v]) => ({ k, ms: avgFromMetric(v) }))
-        .sort((a, b) => b.ms - a.ms)
-        .slice(0, 5);
-      const slowBigrams = Object.entries(state.stats.bigramSpeed)
-        .map(([k, v]) => ({ k, ms: avgFromMetric(v) }))
-        .sort((a, b) => b.ms - a.ms)
-        .slice(0, 5);
-
-      const instability = runtime.rhythmSpikes > 8 ? "Unstable" : runtime.rhythmSpikes > 3 ? "Moderate" : "Stable";
-      state.results = { wpm, accuracy: acc, slowKeys, slowBigrams, rhythmSpikes: runtime.rhythmSpikes, instability };
+      state.results = summarizeResults(wpm, acc, runtime.rhythmSpikes);
 
       const record = {
         date: new Date().toISOString(),
@@ -723,6 +890,7 @@
       ui.resWpm.textContent = state.results.wpm ? state.results.wpm.toFixed(1) : "0";
       ui.resAcc.textContent = state.results.accuracy ? `${state.results.accuracy.toFixed(1)}%` : "0%";
       ui.resRhythm.textContent = `${state.results.instability || "Stable"} (${state.results.rhythmSpikes || 0} spikes)`;
+      ui.resSessions.textContent = String((state.stats.sessions || []).length);
 
       ui.slowKeys.innerHTML = "";
       (state.results.slowKeys || []).forEach(item => {
@@ -799,15 +967,18 @@
     function startDrills() {
       runtime.drillText = generateDrillText();
       runtime.drillIndex = 0;
+      runtime.drillCurrentLine = 0;
+      runtime.drillMistakes.clear();
       runtime.drillStart = null;
       runtime.drillCorrect = 0;
       runtime.drillTotal = 0;
+      runtime.lastCharTime = null;
+      runtime.lastAcceptedChar = "";
       state.sessionProgress = 0;
-      ui.drillInput.value = "";
-      renderTargetText(ui.drillText, runtime.drillText, runtime.drillIndex, new Set());
+      buildDrillLines();
+      renderDrillText(0, 0);
       updateDrillStats();
       switchPhase("drills");
-      setTimeout(() => ui.drillInput.focus(), 0);
     }
 
     function updateDrillStats() {
@@ -829,24 +1000,32 @@
       e.preventDefault();
 
       if (!runtime.drillText[runtime.drillIndex]) return;
-      if (!runtime.drillStart) runtime.drillStart = now();
       runtime.drillTotal += 1;
       const expected = runtime.drillText[runtime.drillIndex];
-      const ok = e.key === expected;
+      const ok = typedCharsMatch(e.key, expected);
+      const t = recordPracticeMetric(expected, e.key, ok);
+      if (!runtime.drillStart) runtime.drillStart = t;
 
       if (ok) {
         runtime.drillCorrect += 1;
         runtime.drillIndex += 1;
         state.sessionProgress += 1;
+      } else {
+        runtime.drillMistakes.add(runtime.drillIndex);
       }
-
-      renderTargetText(ui.drillText, runtime.drillText, runtime.drillIndex, new Set());
+      const nextLine = drillIndexToLine(runtime.drillIndex);
+      const prevLine = runtime.drillCurrentLine;
+      runtime.drillCurrentLine = Math.max(0, Math.min(nextLine, Math.max(0, runtime.drillLines.length - 3)));
+      renderDrillText(prevLine, runtime.drillCurrentLine);
       updateDrillStats();
 
       if (runtime.drillIndex >= runtime.drillText.length) {
         runtime.drillText = generateDrillText();
         runtime.drillIndex = 0;
-        renderTargetText(ui.drillText, runtime.drillText, runtime.drillIndex, new Set());
+        runtime.drillCurrentLine = 0;
+        runtime.drillMistakes.clear();
+        buildDrillLines();
+        renderDrillText(0, 0);
       }
 
       if (state.sessionProgress >= state.sessionTarget) {
@@ -866,8 +1045,8 @@
         correctChars: runtime.drillCorrect
       };
       state.stats.sessions.push(record);
+      state.results = summarizeResults(wpm, acc, state.results.rhythmSpikes || 0);
       saveSessionHistory(record);
-      alert(`Session complete!\nWPM: ${wpm.toFixed(1)}\nAccuracy: ${acc.toFixed(1)}%`);
       renderResults();
       switchPhase("results");
       saveState();
@@ -911,7 +1090,7 @@
 
     function bind() {
       document.addEventListener("keydown", handleDiagnosticKeydown);
-      ui.drillInput.addEventListener("keydown", handleDrillKeydown);
+      document.addEventListener("keydown", handleDrillKeydown);
       ui.startDrillsBtn.addEventListener("click", startDrills);
       ui.exitBtn.addEventListener("click", () => {
         window.close();
@@ -920,7 +1099,10 @@
       ui.gotItBtn.addEventListener("click", () => showScreen("onboardingScreen"));
       ui.levelCards.forEach(card => {
         card.addEventListener("click", () => {
-          localStorage.setItem(LEVEL_KEY, card.dataset.level || "");
+          const level = card.dataset.level || "under45";
+          localStorage.setItem(LEVEL_KEY, level);
+          state.diagnosticText = DIAGNOSTIC_TEXTS[level] || DIAGNOSTIC_TEXTS.under45;
+          resetDiagnostic();
           switchPhase("diagnostic");
         });
       });
@@ -930,6 +1112,12 @@
           buildDiagnosticLines();
           runtime.diagCurrentLine = Math.max(0, Math.min(prev, Math.max(0, runtime.diagLines.length - 3)));
           renderDiagnosticText(runtime.diagCurrentLine, runtime.diagCurrentLine);
+        }
+        if (state.phase === "drills" && activeScreenId === "drillsPhase") {
+          const prev = runtime.drillCurrentLine;
+          buildDrillLines();
+          runtime.drillCurrentLine = Math.max(0, Math.min(prev, Math.max(0, runtime.drillLines.length - 3)));
+          renderDrillText(runtime.drillCurrentLine, runtime.drillCurrentLine);
         }
       });
     }
@@ -941,7 +1129,6 @@
       if (state.results && Object.keys(state.results).length) {
         renderResults();
       }
-      ui.mainHeader.classList.add("hidden");
       ui.onboardingScreen.classList.add("hidden");
       ui.diagnosticPhase.classList.add("hidden");
       ui.resultsPhase.classList.add("hidden");
