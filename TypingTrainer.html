@@ -493,11 +493,251 @@
     .placeholder-card h2 {
       font-size: 38px;
     }
-    .result-actions {
-      margin-top: 12px;
+    .results-screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      background: #ffffff;
+      color: #000000;
+      padding: clamp(38px, 6.5vh, 78px) clamp(28px, 7vw, 138px) clamp(24px, 5vh, 58px);
+      overflow: hidden;
+    }
+    .results-title {
+      position: absolute;
+      top: clamp(38px, 6.5vh, 78px);
+      left: clamp(32px, 7.6vw, 146px);
+      margin: 0;
+      font-size: clamp(54px, 6.1vw, 98px);
+      line-height: 0.98;
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: 0;
+    }
+    .results-heatmap-area {
+      position: absolute;
+      left: clamp(42px, 10vw, 200px);
+      top: clamp(230px, 39vh, 435px);
+      width: min(46vw, 650px);
+      transform-origin: left center;
+      transition: transform 320ms cubic-bezier(0.22, 0.8, 0.22, 1), top 320ms cubic-bezier(0.22, 0.8, 0.22, 1);
+    }
+    .results-screen.more-open .results-heatmap-area {
+      top: clamp(198px, 34vh, 330px);
+      transform: scale(0.82);
+    }
+    .results-keyboard {
+      gap: clamp(8px, 1vw, 14px);
+      margin-top: 0;
+    }
+    .results-keyboard .keyboard-row {
+      gap: clamp(7px, 0.85vw, 12px);
+    }
+    .results-keyboard .key {
+      --key-color: #192338;
+      min-height: clamp(52px, 5.4vw, 72px);
       display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid #000000;
+      border-radius: 14px;
+      background: var(--key-color);
+      color: #ffffff;
+      font-size: clamp(20px, 2.1vw, 32px);
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+      opacity: 1;
+    }
+    .results-keyboard.is-revealing .key {
+      background: #edf3ff;
+      color: #8a94a8;
+      animation: heatmapReplay 520ms ease both;
+      animation-delay: calc(var(--reveal-index, 0) * 72ms);
+    }
+    @keyframes heatmapReplay {
+      from {
+        background: #edf3ff;
+        color: #8a94a8;
+        transform: translateY(10px) scale(0.96);
+        filter: saturate(0.7) brightness(1.12);
+      }
+      to {
+        background: var(--key-color);
+        color: #ffffff;
+        transform: translateY(0) scale(1);
+        filter: saturate(1) brightness(1);
+      }
+    }
+    .results-score-area {
+      position: absolute;
+      right: clamp(70px, 15.6vw, 300px);
+      top: clamp(162px, 21vh, 230px);
+      display: grid;
+      justify-items: center;
+      gap: clamp(22px, 3vh, 34px);
+      transition: top 340ms cubic-bezier(0.22, 0.8, 0.22, 1), right 340ms cubic-bezier(0.22, 0.8, 0.22, 1);
+    }
+    .results-screen.more-open .results-score-area {
+      top: clamp(58px, 11vh, 94px);
+      right: clamp(300px, 39vw, 610px);
+      gap: 20px;
+    }
+    .score-donut {
+      --score: 0;
+      width: clamp(270px, 26.8vw, 520px);
+      aspect-ratio: 1;
+      position: relative;
+      display: grid;
+      place-items: center;
+      border: clamp(6px, 0.55vw, 8px) solid #000000;
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at 28% 16%, #ffffff 0 17%, transparent 17.5%),
+        conic-gradient(#ddd9fb calc(var(--score) * 1%), #ffffff 0);
+      transition: width 340ms cubic-bezier(0.22, 0.8, 0.22, 1), background 900ms ease;
+    }
+    .results-screen.more-open .score-donut {
+      width: clamp(116px, 12vw, 160px);
+      border-width: 3px;
+    }
+    .score-donut::before {
+      content: "";
+      position: absolute;
+      inset: 23%;
+      border: clamp(5px, 0.48vw, 7px) solid #000000;
+      border-radius: 50%;
+      background: #ffffff;
+      z-index: 0;
+    }
+    .results-screen.more-open .score-donut::before {
+      border-width: 3px;
+    }
+    .score-value {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(70px, 6.8vw, 120px);
+      line-height: 1;
+      font-weight: 700;
+      color: #000000;
+    }
+    .results-screen.more-open .score-value {
+      font-size: clamp(30px, 4vw, 42px);
+    }
+    .result-more-btn {
+      display: inline-flex;
+      align-items: center;
       gap: 12px;
-      flex-wrap: wrap;
+      min-height: 54px;
+      border: 0;
+      background: transparent;
+      color: #b7b8bc;
+      font-size: clamp(34px, 3vw, 48px);
+      font-weight: 700;
+      padding: 0;
+    }
+    .result-more-btn:hover {
+      background: transparent;
+      color: #9fa1a7;
+      transform: none;
+    }
+    .result-more-caret {
+      width: 18px;
+      height: 18px;
+      border-right: 4px solid currentColor;
+      border-bottom: 4px solid currentColor;
+      transform: rotate(45deg) translateY(-4px);
+      transition: transform 220ms ease;
+    }
+    .result-more-btn[aria-expanded="true"] .result-more-caret {
+      transform: rotate(225deg) translateY(-3px);
+    }
+    .result-summary-line {
+      color: #000000;
+      font-size: clamp(20px, 1.8vw, 30px);
+      line-height: 1.15;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .results-screen.more-open .results-score-area .result-summary-line {
+      display: none;
+    }
+    .result-advanced-panel {
+      position: absolute;
+      left: clamp(560px, 56vw, 920px);
+      top: clamp(292px, 38vh, 356px);
+      width: min(430px, 35vw);
+      color: #000000;
+      font-size: clamp(16px, 1.15vw, 21px);
+      line-height: 1.22;
+      opacity: 0;
+      transform: translateY(14px);
+      pointer-events: none;
+      transition: opacity 240ms ease, transform 320ms cubic-bezier(0.22, 0.8, 0.22, 1);
+    }
+    .results-screen.more-open .result-advanced-panel {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .result-advanced-panel h3 {
+      margin: 0 0 5px;
+      font-size: inherit;
+      font-weight: 700;
+    }
+    .result-advanced-panel ul {
+      margin: 0 0 12px;
+      padding: 0;
+      list-style: none;
+      color: #000000;
+      font-weight: 700;
+    }
+    .result-advanced-panel .result-summary-line {
+      margin-bottom: 16px;
+      text-align: left;
+      font-size: clamp(18px, 1.28vw, 23px);
+    }
+    .result-session-info {
+      display: grid;
+      gap: 3px;
+      margin-top: 4px;
+      color: #232323;
+      font-size: 0.78em;
+      font-weight: 600;
+    }
+    .result-next-btn {
+      position: absolute;
+      left: 50%;
+      bottom: clamp(26px, 5vh, 56px);
+      transform: translateX(-50%);
+      min-width: clamp(180px, 15vw, 294px);
+      min-height: clamp(58px, 8vh, 90px);
+      border: 0;
+      border-radius: 18px;
+      background: #dfdcff;
+      color: #000000;
+      font-size: clamp(34px, 3vw, 52px);
+      font-weight: 700;
+      padding: 8px 34px;
+    }
+    .result-next-btn:hover {
+      background: #d4d0ff;
+      transform: translateX(-50%) translateY(-1px);
+    }
+    .result-back-btn {
+      position: absolute;
+      right: clamp(22px, 4vw, 62px);
+      bottom: clamp(20px, 4vh, 42px);
+      border: 0;
+      background: transparent;
+      color: #b5b5b5;
+      font-size: 16px;
+      padding: 8px;
+    }
+    .result-back-btn:hover {
+      background: transparent;
+      color: #777777;
+      transform: none;
     }
     .btn-home {
       background: #dfdcff;
@@ -773,6 +1013,19 @@
     }
     .settings-danger:hover {
       background: color-mix(in srgb, var(--bad) 22%, var(--panel));
+    }
+    .settings-action-btn {
+      min-width: 188px;
+      min-height: 44px;
+      border-radius: 12px;
+      background: #dfdcff;
+      border-color: #c6c1fb;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .settings-action-btn:hover {
+      background: #d4d0ff;
     }
     .metric-hidden {
       display: none !important;
@@ -1186,6 +1439,70 @@
       .keyboard-dropdown-button {
         width: 100%;
       }
+      .results-screen {
+        padding: 28px 22px 96px;
+        overflow-y: auto;
+      }
+      .results-title,
+      .results-heatmap-area,
+      .results-score-area,
+      .result-advanced-panel,
+      .result-next-btn,
+      .result-back-btn {
+        position: static;
+      }
+      .results-title {
+        font-size: 52px;
+        margin-bottom: 34px;
+      }
+      .results-heatmap-area,
+      .results-screen.more-open .results-heatmap-area {
+        width: 100%;
+        transform: none;
+        margin-top: 18px;
+      }
+      .results-score-area,
+      .results-screen.more-open .results-score-area {
+        margin: 34px auto 0;
+        gap: 14px;
+      }
+      .score-donut,
+      .results-screen.more-open .score-donut {
+        width: min(66vw, 260px);
+      }
+      .score-value,
+      .results-screen.more-open .score-value {
+        font-size: 64px;
+      }
+      .result-more-btn {
+        font-size: 30px;
+      }
+      .result-advanced-panel {
+        width: 100%;
+        margin: 22px auto 0;
+        font-size: 20px;
+      }
+      .result-next-btn {
+        display: block;
+        min-width: 166px;
+        min-height: 58px;
+        margin: 36px auto 0;
+        transform: none;
+        font-size: 32px;
+      }
+      .result-next-btn:hover {
+        transform: none;
+      }
+      .result-back-btn {
+        display: block;
+        margin: 12px auto 0;
+      }
+      .results-keyboard .key {
+        min-height: 42px;
+        border-width: 2px;
+        border-radius: 10px;
+        font-size: 17px;
+      }
     }
     @media (max-height: 760px) and (min-width: 921px) {
       .app-topbar {
@@ -1296,6 +1613,31 @@
         height: 44px;
         font-size: 20px;
       }
+      .results-screen {
+        padding-top: 44px;
+      }
+      .results-title {
+        font-size: clamp(46px, 5.2vw, 72px);
+      }
+      .results-heatmap-area {
+        top: clamp(170px, 35vh, 250px);
+      }
+      .results-score-area {
+        top: clamp(86px, 15vh, 132px);
+      }
+      .score-donut {
+        width: clamp(210px, 22vw, 300px);
+      }
+      .score-value {
+        font-size: clamp(54px, 5.4vw, 80px);
+      }
+      .result-more-btn {
+        font-size: clamp(28px, 2.5vw, 38px);
+      }
+      .result-next-btn {
+        min-height: 58px;
+        font-size: clamp(28px, 2.7vw, 40px);
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       .settings-toggle,
@@ -1307,7 +1649,13 @@
       .settings-screen.slide-enter .settings-shell,
       .settings-screen.slide-exit .settings-shell,
       .app.shell-hidden .slide-enter,
-      .app.shell-hidden .slide-exit {
+      .app.shell-hidden .slide-exit,
+      .results-keyboard.is-revealing .key,
+      .score-donut,
+      .results-score-area,
+      .results-heatmap-area,
+      .result-advanced-panel,
+      .result-more-caret {
         transition: none;
         animation: none;
       }
@@ -1419,6 +1767,13 @@
             <h3 id="settingsDataTitle" class="settings-section-title">Data</h3>
             <div class="settings-row">
               <div>
+                <div class="settings-row-title">Sample Results</div>
+                <div class="settings-row-desc">Load a small demo typing profile and jump straight to the results screen.</div>
+              </div>
+              <button type="button" id="sampleResultsBtn" class="settings-action-btn">View Sample Results</button>
+            </div>
+            <div class="settings-row">
+              <div>
                 <div class="settings-row-title">Saved Progress</div>
                 <div class="settings-row-desc">Wipe completed startup flow, selected typing level, session results, streaks, and typing history.</div>
               </div>
@@ -1470,26 +1825,36 @@
       <div id="diagnosticText" class="typing-box diagnostic-typing"></div>
     </section>
 
-    <section id="resultsPhase" class="screen panel hidden">
-      <h2>Results</h2>
-      <div class="grid">
-        <div class="kpi"><div>WPM</div><div id="resWpm" class="v">0</div></div>
-        <div class="kpi"><div>Accuracy</div><div id="resAcc" class="v">0%</div></div>
-        <div class="kpi"><div>Rhythm</div><div id="resRhythm" class="v">Stable</div></div>
-        <div class="kpi"><div>Sessions</div><div id="resSessions" class="v">0</div></div>
+    <section id="resultsPhase" class="screen results-screen hidden">
+      <h2 class="results-title">Results</h2>
+      <div class="results-heatmap-area" aria-label="Keyboard speed heatmap replay">
+        <div id="keyboardMap" class="keyboard results-keyboard"></div>
       </div>
-      <div class="grid" style="margin-top:10px;">
-        <div class="kpi"><h3>Top 5 Slowest Keys</h3><ul id="slowKeys"></ul></div>
-        <div class="kpi"><h3>Top 5 Slowest Bigrams</h3><ul id="slowBigrams"></ul></div>
+      <div class="results-score-area">
+        <div id="resultScoreDonut" class="score-donut" style="--score: 0" aria-label="Result score">
+          <div id="resultScoreValue" class="score-value">0</div>
+        </div>
+        <button id="resultMoreBtn" class="result-more-btn" type="button" aria-expanded="false" aria-controls="resultAdvancedPanel">
+          <span id="resultMoreLabel">More</span>
+          <span class="result-more-caret" aria-hidden="true"></span>
+        </button>
+        <div id="resultSummaryLine" class="result-summary-line">0 WPM | 0%</div>
       </div>
-      <div class="kpi" style="margin-top:10px;">
-        <h3>Keyboard Speed Heatmap</h3>
-        <div id="keyboardMap" class="keyboard"></div>
+      <div id="resultAdvancedPanel" class="result-advanced-panel" hidden>
+        <div id="resultAdvancedSummaryLine" class="result-summary-line">0 WPM | 0%</div>
+        <h3>Highest Average Delay:</h3>
+        <ul id="slowKeys"></ul>
+        <h3>Slowest Bigrams:</h3>
+        <ul id="slowBigrams"></ul>
+        <div class="result-session-info">
+          <div>WPM: <span id="resWpm">0</span></div>
+          <div>Accuracy: <span id="resAcc">0%</span></div>
+          <div>Rhythm: <span id="resRhythm">Stable</span></div>
+          <div>Sessions: <span id="resSessions">0</span></div>
+        </div>
       </div>
-      <div class="result-actions">
-        <button type="button" id="startDrillsBtn">Start Training Session</button>
-        <button type="button" id="backHomeBtn" class="btn-home">Back to Home</button>
-      </div>
+      <button type="button" id="startDrillsBtn" class="result-next-btn">Next &gt;&gt;</button>
+      <button type="button" id="backHomeBtn" class="result-back-btn">Back home</button>
     </section>
 
     <section id="drillsPhase" class="screen panel hidden">
@@ -1603,6 +1968,7 @@
       secondaryBlockTitle: document.getElementById("secondaryBlockTitle"),
       secondaryBlockSubtitle: document.getElementById("secondaryBlockSubtitle"),
       settingsHomeBtn: document.getElementById("settingsHomeBtn"),
+      sampleResultsBtn: document.getElementById("sampleResultsBtn"),
       resetDataBtn: document.getElementById("resetDataBtn"),
       liveWpmToggle: document.getElementById("liveWpmToggle"),
       accuracyToggle: document.getElementById("accuracyToggle"),
@@ -1630,6 +1996,13 @@
       resSessions: document.getElementById("resSessions"),
       slowKeys: document.getElementById("slowKeys"),
       slowBigrams: document.getElementById("slowBigrams"),
+      resultScoreDonut: document.getElementById("resultScoreDonut"),
+      resultScoreValue: document.getElementById("resultScoreValue"),
+      resultMoreBtn: document.getElementById("resultMoreBtn"),
+      resultMoreLabel: document.getElementById("resultMoreLabel"),
+      resultSummaryLine: document.getElementById("resultSummaryLine"),
+      resultAdvancedSummaryLine: document.getElementById("resultAdvancedSummaryLine"),
+      resultAdvancedPanel: document.getElementById("resultAdvancedPanel"),
       keyboardMap: document.getElementById("keyboardMap"),
       startDrillsBtn: document.getElementById("startDrillsBtn"),
       backHomeBtn: document.getElementById("backHomeBtn"),
@@ -1650,7 +2023,7 @@
       welcomeScreen: { title: "Available Blocks", nav: "home", hideShell: true },
       onboardingScreen: { title: "Available Blocks", nav: "home", hideShell: true },
       diagnosticPhase: { title: "Diagnostic", nav: "home", hideShell: true },
-      resultsPhase: { title: "Results", nav: "stats" },
+      resultsPhase: { title: "Results", nav: "stats", hideShell: true },
       drillsPhase: { title: "Training Session", nav: "home", slideShellAway: true }
     };
 
@@ -1819,6 +2192,10 @@
       const m = ensureMetric(map, key);
       m.total += value;
       m.count += 1;
+    }
+
+    function setMetricAverage(map, key, ms, count = 5) {
+      map[key] = { total: ms * count, count };
     }
 
     function meanMetric(map, key) {
@@ -2026,6 +2403,44 @@
       renderHomeBlocks();
       updateTopStatus();
       showScreen("welcomeScreen");
+    }
+
+    function loadSampleResults() {
+      const keySamples = {
+        q: 170, w: 102, e: 96, r: 145, t: 126, y: 104, u: 91, i: 182, o: 112, p: 118,
+        a: 138, s: 98, d: 116, f: 93, g: 121, h: 132, j: 176, k: 108, l: 101,
+        z: 228, x: 215, c: 188, v: 120, b: 109, n: 97, m: 104
+      };
+      const bigramSamples = {
+        rc: 286, fi: 275, gi: 230, ra: 228, ic: 206,
+        ze: 198, jo: 188, ca: 176, tr: 166, sh: 152
+      };
+      state.stats.keySpeed = {};
+      state.stats.bigramSpeed = {};
+      state.stats.errors = { z: 2, x: 1, i: 1, c: 1 };
+      Object.entries(keySamples).forEach(([key, ms]) => setMetricAverage(state.stats.keySpeed, key, ms, 6));
+      Object.entries(bigramSamples).forEach(([key, ms]) => setMetricAverage(state.stats.bigramSpeed, key, ms, 4));
+
+      const record = {
+        date: new Date().toISOString(),
+        type: "sample",
+        wpm: 62.4,
+        accuracy: 96.8,
+        rhythmSpikes: 5
+      };
+      state.stats.sessions = [record];
+      state.results = summarizeResults(record.wpm, record.accuracy, record.rhythmSpikes);
+      state.keystrokes = [];
+      state.startTime = null;
+      state.phase = "results";
+      state.sessionProgress = 0;
+      state.activeBlockType = "mixed";
+      localStorage.setItem(STARTUP_COMPLETE_KEY, "true");
+      saveSessionHistory(record);
+      renderResults();
+      renderHomeBlocks();
+      updateTopStatus();
+      switchPhase("results");
     }
 
     function switchPhase(phase) {
@@ -2286,6 +2701,21 @@
       return { wpm, accuracy, slowKeys, slowBigrams, rhythmSpikes: spikes, instability };
     }
 
+    function calculateResultScoreParts(results = {}) {
+      const wpm = Number(results.wpm || 0);
+      const accuracy = Number(results.accuracy || 0);
+      const rhythmSpikes = Number(results.rhythmSpikes || 0);
+      const speedScore = Math.max(0, Math.min(100, wpm));
+      const accuracyScore = Math.max(0, Math.min(100, accuracy));
+      const rhythmScore = Math.max(0, 100 - rhythmSpikes * 6);
+      const total = Math.round(speedScore * 0.35 + accuracyScore * 0.45 + rhythmScore * 0.20);
+      return { speedScore, accuracyScore, rhythmScore, total };
+    }
+
+    function calculateResultScore(results = {}) {
+      return calculateResultScoreParts(results).total;
+    }
+
     function handleDiagnosticKeydown(e) {
       if (state.phase !== "diagnostic" || runtime.diagDone) return;
       if (e.key === "Tab" || e.key === "Alt" || e.key === "Shift" || e.key === "Control" || e.key === "Meta") return;
@@ -2344,15 +2774,21 @@
     }
 
     function renderResults() {
-      ui.resWpm.textContent = state.results.wpm ? state.results.wpm.toFixed(1) : "0";
-      ui.resAcc.textContent = state.results.accuracy ? `${state.results.accuracy.toFixed(1)}%` : "0%";
+      const score = calculateResultScore(state.results);
+      const wpmText = state.results.wpm ? state.results.wpm.toFixed(1) : "0";
+      const accuracyText = state.results.accuracy ? `${state.results.accuracy.toFixed(1)}%` : "0%";
+      const summaryText = `${wpmText} WPM | ${accuracyText}`;
+      ui.resWpm.textContent = wpmText;
+      ui.resAcc.textContent = accuracyText;
       ui.resRhythm.textContent = `${state.results.instability || "Stable"} (${state.results.rhythmSpikes || 0} spikes)`;
       ui.resSessions.textContent = String((state.stats.sessions || []).length);
+      ui.resultSummaryLine.textContent = summaryText;
+      ui.resultAdvancedSummaryLine.textContent = summaryText;
 
       ui.slowKeys.innerHTML = "";
       (state.results.slowKeys || []).forEach(item => {
         const li = document.createElement("li");
-        li.textContent = `${item.k.toUpperCase()} - ${item.ms.toFixed(0)}ms`;
+        li.textContent = `${item.k.toUpperCase()} (${item.ms.toFixed(0)} ms)`;
         ui.slowKeys.appendChild(li);
       });
       if (!ui.slowKeys.children.length) ui.slowKeys.innerHTML = "<li>No data</li>";
@@ -2360,12 +2796,69 @@
       ui.slowBigrams.innerHTML = "";
       (state.results.slowBigrams || []).forEach(item => {
         const li = document.createElement("li");
-        li.textContent = `${item.k} - ${item.ms.toFixed(0)}ms`;
+        li.textContent = `${item.k.toUpperCase()} (${item.ms.toFixed(0)} ms)`;
         ui.slowBigrams.appendChild(li);
       });
       if (!ui.slowBigrams.children.length) ui.slowBigrams.innerHTML = "<li>No data</li>";
 
+      setResultsExpanded(false, { immediate: true });
       renderKeyboardHeatmap();
+      animateResultScore(score);
+      replayResultsHeatmap();
+    }
+
+    function animateResultScore(score) {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      ui.resultScoreDonut.style.setProperty("--score", "0");
+      ui.resultScoreValue.textContent = "0";
+      if (reducedMotion) {
+        ui.resultScoreDonut.style.setProperty("--score", String(score));
+        ui.resultScoreValue.textContent = String(score);
+        return;
+      }
+      const start = performance.now();
+      const duration = 900;
+      const tick = timestamp => {
+        const t = Math.min(1, (timestamp - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const currentScore = Math.round(score * eased);
+        ui.resultScoreDonut.style.setProperty("--score", String(score * eased));
+        ui.resultScoreValue.textContent = String(currentScore);
+        if (t < 1) requestAnimationFrame(tick);
+        else {
+          ui.resultScoreDonut.style.setProperty("--score", String(score));
+          ui.resultScoreValue.textContent = String(score);
+        }
+      };
+      requestAnimationFrame(tick);
+    }
+
+    function replayResultsHeatmap() {
+      ui.keyboardMap.classList.remove("is-revealing");
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      void ui.keyboardMap.offsetWidth;
+      ui.keyboardMap.classList.add("is-revealing");
+    }
+
+    function setResultsExpanded(expanded, options = {}) {
+      ui.resultMoreBtn.setAttribute("aria-expanded", String(expanded));
+      ui.resultMoreLabel.textContent = expanded ? "Less" : "More";
+      if (expanded) {
+        ui.resultAdvancedPanel.hidden = false;
+        requestAnimationFrame(() => ui.resultsPhase.classList.add("more-open"));
+      } else if (options.immediate) {
+        ui.resultsPhase.classList.remove("more-open");
+        ui.resultAdvancedPanel.hidden = true;
+      } else {
+        ui.resultsPhase.classList.remove("more-open");
+        window.setTimeout(() => {
+          if (!ui.resultsPhase.classList.contains("more-open")) ui.resultAdvancedPanel.hidden = true;
+        }, 320);
+      }
+    }
+
+    function toggleResultsExpanded() {
+      setResultsExpanded(!ui.resultsPhase.classList.contains("more-open"));
     }
 
     function colorForMs(ms) {
@@ -2377,6 +2870,7 @@
 
     function renderKeyboardHeatmap() {
       ui.keyboardMap.innerHTML = "";
+      let revealIndex = 0;
       currentKeyboardRows().forEach((row, rowIndex) => {
         const rowEl = document.createElement("div");
         rowEl.className = `keyboard-row ${rowIndex === 0 ? "top-row" : rowIndex === 1 ? "home-row" : "bottom-row"}`;
@@ -2384,10 +2878,12 @@
           const ms = meanMetric(state.stats.keySpeed, ch);
           const el = document.createElement("div");
           el.className = "key";
-          el.style.background = colorForMs(ms);
+          el.style.setProperty("--key-color", colorForMs(ms));
+          el.style.setProperty("--reveal-index", String(revealIndex));
           el.textContent = ch.toUpperCase();
           el.title = ms ? `${ms.toFixed(0)}ms average` : "No data";
           rowEl.appendChild(el);
+          revealIndex += 1;
         });
         ui.keyboardMap.appendChild(rowEl);
       });
@@ -2765,6 +3261,7 @@
       ui.recommendedBlockBtn.addEventListener("click", () => beginHomeBlock("recommended"));
       ui.speedBlockBtn.addEventListener("click", () => beginHomeBlock("secondary"));
       ui.settingsHomeBtn.addEventListener("click", goHome);
+      ui.sampleResultsBtn.addEventListener("click", loadSampleResults);
       ui.resetDataBtn.addEventListener("click", resetSavedData);
       ui.liveWpmToggle.addEventListener("click", () => updateSetting("showLiveWpm", !state.settings.showLiveWpm));
       ui.accuracyToggle.addEventListener("click", () => updateSetting("showAccuracy", !state.settings.showAccuracy));
@@ -2808,6 +3305,7 @@
           setKeyboardDropdownOpen(false);
         }
       });
+      ui.resultMoreBtn.addEventListener("click", toggleResultsExpanded);
       ui.backHomeBtn.addEventListener("click", goHome);
       ui.startDrillsBtn.addEventListener("click", () => startDrills());
       ui.exitBtn.addEventListener("click", () => {
