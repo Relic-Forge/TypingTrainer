@@ -213,6 +213,12 @@
       margin-bottom: 0;
       will-change: opacity, transform;
     }
+    .app.shell-hidden .screen.transitioning {
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+    }
     .slide-enter {
       animation: screenEnter 300ms cubic-bezier(0.22, 0.8, 0.22, 1) forwards;
       z-index: 2;
@@ -221,6 +227,14 @@
       animation: screenExit 300ms cubic-bezier(0.22, 0.8, 0.22, 1) forwards;
       z-index: 1;
     }
+    .app.shell-hidden .slide-enter {
+      animation: settingsOverlayEnter 220ms ease forwards;
+      transform: none;
+    }
+    .app.shell-hidden .slide-exit {
+      animation: settingsOverlayExit 180ms ease forwards;
+      transform: none;
+    }
     @keyframes screenEnter {
       from { opacity: 0; transform: translateX(var(--screen-slide)); }
       to { opacity: 1; transform: translateX(0); }
@@ -228,6 +242,14 @@
     @keyframes screenExit {
       from { opacity: 1; transform: translateX(0); }
       to { opacity: 0; transform: translateX(calc(var(--screen-slide) * -1)); }
+    }
+    @keyframes settingsOverlayEnter {
+      from { opacity: 0; transform: none; }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes settingsOverlayExit {
+      from { opacity: 1; transform: none; }
+      to { opacity: 0; transform: none; }
     }
     .panel {
       background: var(--panel);
@@ -506,11 +528,38 @@
       align-items: center;
       justify-content: center;
       padding: 18px;
-      background: rgba(0, 0, 0, 0.78);
+      background: rgba(0, 0, 0, 0.34);
+      backdrop-filter: blur(16px) saturate(0.86);
+      -webkit-backdrop-filter: blur(16px) saturate(0.86);
+    }
+    .settings-screen.slide-enter .settings-shell {
+      animation: settingsPanelEnter 260ms cubic-bezier(0.22, 0.8, 0.22, 1) both;
+    }
+    .settings-screen.slide-exit .settings-shell {
+      animation: settingsPanelExit 180ms ease both;
+    }
+    @keyframes settingsPanelEnter {
+      from { opacity: 0; transform: translateY(12px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes settingsPanelExit {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(8px) scale(0.992); }
+    }
+    .screen.settings-underlay {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      filter: blur(2px);
+      transform: scale(1.012);
+      opacity: 0.9;
     }
     .settings-shell {
-      width: min(1220px, 100%);
-      height: min(760px, 100%);
+      width: min(1220px, calc(100vw - 36px));
+      height: min(760px, calc(100dvh - 36px));
       position: relative;
       overflow: hidden;
       border-radius: 26px;
@@ -1100,6 +1149,7 @@
         padding: 0;
       }
       .settings-shell {
+        width: 100%;
         height: 100%;
         border-radius: 0;
       }
@@ -1189,6 +1239,63 @@
         min-height: 50px;
         font-size: clamp(22px, 2.2vw, 32px);
       }
+      .settings-screen {
+        padding: 14px;
+      }
+      .settings-shell {
+        width: min(1120px, calc(100vw - 28px));
+        height: calc(100dvh - 28px);
+        border-radius: 22px;
+      }
+      .settings-close {
+        top: 18px;
+        left: 18px;
+        width: 52px;
+        height: 52px;
+        font-size: 31px;
+      }
+      .settings-content {
+        padding: 28px clamp(38px, 5vw, 68px) 36px 118px;
+      }
+      .settings-content h2 {
+        margin-bottom: 26px;
+        font-size: 32px;
+      }
+      .settings-section {
+        padding-top: 20px;
+        margin-top: 22px;
+      }
+      .settings-section-title {
+        margin-bottom: 16px;
+        font-size: 24px;
+      }
+      .settings-row {
+        min-height: 62px;
+        margin-top: 18px;
+      }
+      .settings-row-title {
+        font-size: 22px;
+      }
+      .settings-row-desc {
+        margin-top: 6px;
+        font-size: 16px;
+      }
+      .settings-toggle {
+        width: 60px;
+        height: 36px;
+      }
+      .settings-toggle::before {
+        width: 28px;
+        height: 28px;
+      }
+      .settings-toggle[aria-pressed="true"]::before {
+        transform: translateX(24px);
+      }
+      .keyboard-dropdown-button {
+        min-width: 170px;
+        height: 44px;
+        font-size: 20px;
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       .settings-toggle,
@@ -1196,8 +1303,13 @@
       .keyboard-dropdown-button,
       .keyboard-dropdown-caret,
       .keyboard-dropdown-menu,
-      .keyboard-dropdown-option {
+      .keyboard-dropdown-option,
+      .settings-screen.slide-enter .settings-shell,
+      .settings-screen.slide-exit .settings-shell,
+      .app.shell-hidden .slide-enter,
+      .app.shell-hidden .slide-exit {
         transition: none;
+        animation: none;
       }
     }
   </style>
@@ -1469,6 +1581,7 @@
     let activeScreenId = "homeScreen";
     let transitionToken = 0;
     let transitionCleanupTimer = null;
+    let settingsUnderlayScreenId = null;
 
     const ui = {
       app: document.querySelector(".app"),
@@ -1668,6 +1781,7 @@
         history.replaceState(null, "", location.pathname);
       }
       ui.settingsScreen.querySelector(".settings-content").scrollTop = 0;
+      settingsUnderlayScreenId = activeScreenId;
       showScreen("settingsScreen");
       requestAnimationFrame(() => {
         ui.settingsScreen.querySelector(".settings-content").scrollTop = 0;
@@ -1721,6 +1835,8 @@
       const current = document.getElementById(activeScreenId);
       const next = document.getElementById(targetId);
       if (!next) return;
+      const openingSettings = targetId === "settingsScreen" && current;
+      const leavingSettings = activeScreenId === "settingsScreen";
       const transitionMs = 300;
       const token = ++transitionToken;
       if (transitionCleanupTimer) {
@@ -1729,29 +1845,49 @@
       }
       document.querySelectorAll(".screen.transitioning").forEach(screen => {
         screen.classList.remove("transitioning", "slide-enter", "slide-exit");
-        if (screen.id !== activeScreenId && screen.id !== targetId) {
+        if (
+          screen.id !== activeScreenId &&
+          screen.id !== targetId &&
+          screen.id !== settingsUnderlayScreenId
+        ) {
           screen.classList.add("hidden");
         }
       });
       if (current) {
         current.classList.remove("slide-enter", "slide-exit");
-        current.classList.add("transitioning", "slide-exit");
+        if (openingSettings) {
+          current.classList.add("settings-underlay");
+          current.classList.remove("transitioning");
+          current.classList.remove("hidden");
+        } else {
+          current.classList.remove("settings-underlay");
+          current.classList.add("transitioning", "slide-exit");
+        }
       }
       next.classList.remove("hidden", "slide-exit");
+      next.classList.remove("settings-underlay");
       next.classList.add("transitioning", "slide-enter");
       activeScreenId = targetId;
       updateShellForScreen(targetId);
       transitionCleanupTimer = setTimeout(() => {
         if (token !== transitionToken) return;
-        if (current) current.classList.add("hidden");
-        if (current) current.classList.remove("transitioning", "slide-exit");
+        if (current && !openingSettings) current.classList.add("hidden");
+        if (current && !openingSettings) current.classList.remove("transitioning", "slide-exit");
         next.classList.remove("transitioning", "slide-enter");
         document.querySelectorAll(".screen").forEach(screen => {
-          if (screen.id !== activeScreenId) {
+          if (screen.id !== activeScreenId && screen.id !== settingsUnderlayScreenId) {
             screen.classList.add("hidden");
             screen.classList.remove("transitioning", "slide-enter", "slide-exit");
           }
         });
+        if (leavingSettings && settingsUnderlayScreenId) {
+          const underlay = document.getElementById(settingsUnderlayScreenId);
+          if (underlay && underlay.id !== activeScreenId) {
+            underlay.classList.add("hidden");
+          }
+          if (underlay) underlay.classList.remove("settings-underlay");
+          settingsUnderlayScreenId = null;
+        }
         transitionCleanupTimer = null;
       }, transitionMs);
     }
