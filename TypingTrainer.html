@@ -372,11 +372,18 @@
       line-height: 1;
     }
     .app-main {
+      --app-main-pad-top: 24px;
+      --app-main-pad-right: clamp(18px, 5vw, 96px);
+      --app-main-pad-bottom: 24px;
+      --app-main-pad-left: clamp(18px, 5vw, 96px);
       flex: 1 1 auto;
       min-height: 0;
       position: relative;
       overflow: hidden;
-      padding: 24px clamp(18px, 5vw, 96px);
+      padding: var(--app-main-pad-top) var(--app-main-pad-right) var(--app-main-pad-bottom) var(--app-main-pad-left);
+    }
+    .app.stats-active .app-main {
+      --app-main-pad-top: clamp(4px, 0.8vh, 8px);
     }
     .app-nav {
       height: 92px;
@@ -425,11 +432,11 @@
     }
     .screen.transitioning {
       position: absolute;
-      top: 24px;
-      left: clamp(18px, 5vw, 96px);
-      right: clamp(18px, 5vw, 96px);
+      top: var(--app-main-pad-top);
+      left: var(--app-main-pad-left);
+      right: var(--app-main-pad-right);
       width: auto;
-      height: calc(100% - 48px);
+      height: calc(100% - var(--app-main-pad-top) - var(--app-main-pad-bottom));
       margin-bottom: 0;
       will-change: opacity, transform;
     }
@@ -812,6 +819,9 @@
       height: 100%;
       overflow: auto;
       padding: clamp(12px, 2vh, 24px) 0;
+    }
+    #statisticsScreen.insight-screen {
+      padding-top: 0;
     }
     .insight-shell {
       width: min(1320px, 100%);
@@ -1205,8 +1215,8 @@
       margin: 0 auto;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
-      gap: clamp(18px, 3vh, 28px);
-      padding: clamp(18px, 3.2vh, 34px) clamp(18px, 4.2vw, 64px) clamp(22px, 4vh, 44px);
+      gap: clamp(12px, 2vh, 22px);
+      padding: 0 clamp(18px, 4.2vw, 64px) clamp(14px, 2.4vh, 30px);
     }
     .stats-kpi-grid {
       display: grid;
@@ -1216,28 +1226,32 @@
     }
     .stats-kpi-card {
       min-width: 0;
-      min-height: clamp(70px, 9.2vh, 96px);
+      min-height: clamp(78px, 9vh, 110px);
       border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
       border-radius: clamp(18px, 2.2vw, 28px);
       background: color-mix(in srgb, var(--panel) 82%, var(--app-bg));
-      padding: clamp(14px, 1.8vh, 20px) clamp(18px, 2vw, 28px);
+      padding: clamp(16px, 1.9vh, 24px) clamp(18px, 2vw, 28px);
       box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: clamp(6px, 0.8vh, 10px);
     }
     .stats-kpi-label {
       color: var(--muted);
       font-size: clamp(12px, 1vw, 16px);
-      line-height: 1;
+      line-height: 1.2;
       font-weight: 800;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .stats-kpi-value {
-      margin-top: 6px;
+      margin-top: 0;
       color: var(--text);
-      font-size: clamp(28px, 3vw, 42px);
-      line-height: 0.95;
+      font-size: clamp(26px, 2.8vw, 40px);
+      line-height: 1.05;
       font-weight: 900;
       letter-spacing: 0;
       white-space: nowrap;
@@ -1254,7 +1268,9 @@
       white-space: nowrap;
       width: fit-content;
       max-width: 100%;
-      margin: 0 0 clamp(12px, 1.6vh, 18px);
+      justify-self: center;
+      margin: clamp(8px, 1.2vh, 14px) 0 0;
+      order: 2;
     }
     .stats-legend-item {
       display: inline-flex;
@@ -1273,43 +1289,107 @@
       justify-content: center;
       margin: 0;
       position: absolute;
-      top: clamp(18px, 2.6vh, 28px);
-      left: 50%;
-      transform: translateX(-50%);
+      top: 50%;
+      right: clamp(18px, 2.8vw, 34px);
+      transform: translateY(-50%);
       z-index: 2;
     }
     .stats-view-tabs {
       display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--panel) 72%, transparent);
-      box-shadow: 0 10px 22px color-mix(in srgb, #000000 20%, transparent);
-    }
-    .stats-view-tab {
-      min-width: clamp(94px, 9vw, 142px);
-      min-height: 48px;
-      padding: 0 18px;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: clamp(10px, 1.6vh, 18px);
+      padding: 0;
       border: 0;
       border-radius: 999px;
       background: transparent;
-      color: var(--muted);
+      box-shadow: none;
+    }
+    .stats-view-tab {
+      width: clamp(42px, 4.5vw, 58px);
+      min-width: 0;
+      min-height: clamp(42px, 4.8vh, 52px);
+      padding: 0 clamp(11px, 1.1vw, 14px);
+      border: 0;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--panel) 82%, #ffffff);
+      color: var(--text);
       font-family: var(--ui-font);
-      font-size: clamp(15px, 1.25vw, 18px);
+      font-size: 0;
       font-weight: 800;
       cursor: pointer;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      overflow: hidden;
+      box-shadow: 0 10px 20px color-mix(in srgb, #000000 20%, transparent);
+      transition: width 180ms cubic-bezier(0.22, 0.8, 0.22, 1),
+                  background-color 180ms ease,
+                  color 180ms ease;
+    }
+    .stats-view-tab:hover {
+      background: color-mix(in srgb, var(--text) 14%, var(--panel));
+      color: var(--text);
     }
     .stats-view-tab.active,
     .stats-view-tab[aria-pressed="true"] {
       background: var(--accent);
       color: #071108;
     }
+    .stats-view-tab.active:hover,
+    .stats-view-tab[aria-pressed="true"]:hover {
+      background: var(--accent);
+      color: #071108;
+    }
+    .stats-view-tab:hover,
+    .stats-view-tab:focus-visible {
+      width: clamp(118px, 11vw, 150px);
+      z-index: 1;
+    }
     .stats-view-tab:focus-visible {
       outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
       outline-offset: 2px;
+    }
+    .stats-tab-icon {
+      width: 22px;
+      height: 22px;
+      flex: 0 0 22px;
+      display: block;
+    }
+    .stats-tab-label {
+      max-width: 0;
+      opacity: 0;
+      overflow: hidden;
+      font-size: clamp(14px, 1.1vw, 17px);
+      line-height: 1.2;
+      padding: 2px 0;
+      transition: max-width 180ms cubic-bezier(0.22, 0.8, 0.22, 1),
+                  opacity 120ms ease;
+    }
+    .stats-view-tab:hover .stats-tab-label,
+    .stats-view-tab:focus-visible .stats-tab-label {
+      max-width: 90px;
+      opacity: 1;
+    }
+    html[data-theme="dark"] .stats-view-tab {
+      background: color-mix(in srgb, #ffffff 8%, var(--panel));
+      color: #f4f4f4;
+    }
+    html[data-theme="dark"] .stats-view-tab:hover,
+    html[data-theme="dark"] .stats-view-tab:focus-visible {
+      background: color-mix(in srgb, #ffffff 16%, var(--panel));
+      color: #ffffff;
+    }
+    html[data-theme="dark"] .stats-view-tab.active,
+    html[data-theme="dark"] .stats-view-tab[aria-pressed="true"],
+    html[data-theme="dark"] .stats-view-tab.active:hover,
+    html[data-theme="dark"] .stats-view-tab[aria-pressed="true"]:hover,
+    html[data-theme="dark"] .stats-view-tab.active:focus-visible,
+    html[data-theme="dark"] .stats-view-tab[aria-pressed="true"]:focus-visible {
+      background: var(--accent);
+      color: #071108;
     }
     .stats-graph-card {
       position: relative;
@@ -1318,12 +1398,12 @@
       border: 0;
       border-radius: clamp(34px, 4vw, 58px);
       background: var(--stats-graph-bg);
-      padding: clamp(28px, 4.2vh, 54px) clamp(32px, 4.6vw, 70px) clamp(22px, 3vh, 34px);
+      padding: clamp(14px, 2vh, 24px) clamp(104px, 10vw, 136px) clamp(16px, 2.4vh, 28px) clamp(32px, 4.6vw, 70px);
       overflow: hidden;
       color: #ffffff;
       box-shadow: 0 22px 40px color-mix(in srgb, #000000 24%, transparent);
       display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
       align-content: stretch;
     }
     .stats-graph-tooltip {
@@ -1349,9 +1429,11 @@
     .stats-graph-svg {
       width: 100%;
       height: 100%;
-      min-height: min(420px, 50vh);
+      min-height: 0;
+      max-height: 100%;
       display: block;
       color: var(--muted);
+      order: 1;
     }
     .stats-graph-grid {
       stroke: var(--stats-graph-grid);
@@ -2114,6 +2196,13 @@
       line-height: 1.35;
       color: var(--muted);
     }
+    .settings-footer-note {
+      margin-top: 30px;
+      color: color-mix(in srgb, var(--muted) 76%, #d6d6d6);
+      font-size: 16px;
+      line-height: 1.35;
+      text-align: center;
+    }
     .keyboard-dropdown {
       position: relative;
       min-width: 190px;
@@ -2246,19 +2335,6 @@
     }
     .settings-danger:hover {
       background: color-mix(in srgb, var(--bad) 22%, var(--panel));
-    }
-    .settings-action-btn {
-      min-width: 188px;
-      min-height: 44px;
-      border-radius: 12px;
-      background: #dfdcff;
-      border-color: #c6c1fb;
-      color: var(--text);
-      font-size: 16px;
-      font-weight: 600;
-    }
-    .settings-action-btn:hover {
-      background: #d4d0ff;
     }
     .metric-hidden {
       display: none !important;
@@ -2623,7 +2699,12 @@
       }
       .top-title { font-size: 24px; }
       .top-status { font-size: 20px; gap: 8px; }
-      .app-main { padding: 16px; }
+      .app-main {
+        --app-main-pad-top: 16px;
+        --app-main-pad-right: 16px;
+        --app-main-pad-bottom: 16px;
+        --app-main-pad-left: 16px;
+      }
       .app-nav {
         height: 78px;
         flex-basis: 78px;
@@ -2726,13 +2807,26 @@
       }
       .stats-graph-topbar {
         position: static;
+        transform: none;
         justify-content: center;
         margin: 0 0 14px;
       }
       .stats-view-tabs {
+        flex-direction: row;
         width: 100%;
         overflow-x: auto;
         justify-content: flex-start;
+        gap: 8px;
+      }
+      .stats-view-tab,
+      .stats-view-tab:hover,
+      .stats-view-tab:focus-visible {
+        width: auto;
+        min-width: 46px;
+      }
+      .stats-view-tab:hover .stats-tab-label,
+      .stats-view-tab:focus-visible .stats-tab-label {
+        max-width: 90px;
       }
       .stats-graph-legend {
         font-size: 12px;
@@ -2977,7 +3071,10 @@
         font-size: 22px;
       }
       .app-main {
-        padding: 18px clamp(18px, 5vw, 76px);
+        --app-main-pad-top: 18px;
+        --app-main-pad-right: clamp(18px, 5vw, 76px);
+        --app-main-pad-bottom: 18px;
+        --app-main-pad-left: clamp(18px, 5vw, 76px);
       }
       .home-blocks {
         min-height: min(430px, 76%);
@@ -3014,11 +3111,16 @@
         padding: 18px;
       }
       .stats-dashboard {
-        gap: clamp(28px, 5vw, 54px);
-        padding: clamp(18px, 4vw, 42px);
+        gap: clamp(8px, 1.8vh, 14px);
+        padding: 0 clamp(18px, 3.2vw, 42px) clamp(10px, 1.8vh, 18px);
       }
       .stats-graph-card {
         border-radius: clamp(38px, 5vw, 64px);
+      }
+      .stats-kpi-card {
+        min-height: clamp(72px, 11vh, 92px);
+        padding-top: clamp(12px, 1.8vh, 18px);
+        padding-bottom: clamp(12px, 1.8vh, 18px);
       }
       .stats-kpi-grid {
         gap: clamp(12px, 1.8vw, 20px);
@@ -3278,16 +3380,36 @@
             <div id="statsCurrentStreak" class="stats-kpi-value">0 days</div>
           </div>
           <div class="stats-kpi-card">
-            <div class="stats-kpi-label">Blocks</div>
+            <div class="stats-kpi-label">Blocks completed</div>
             <div id="statsBlocksCompleted" class="stats-kpi-value">0</div>
           </div>
         </div>
         <div id="statsGraphCard" class="stats-graph-card">
           <div class="stats-graph-topbar">
             <div class="stats-view-tabs" role="group" aria-label="Statistics graph view">
-              <button type="button" class="stats-view-tab" data-stats-view="performance" aria-pressed="false">Recent</button>
-              <button type="button" class="stats-view-tab" data-stats-view="daily" aria-pressed="false">Daily</button>
-              <button type="button" class="stats-view-tab active" data-stats-view="monthly" aria-pressed="true">Monthly</button>
+              <button type="button" class="stats-view-tab" data-stats-view="performance" aria-pressed="false" aria-label="Recent">
+                <svg class="stats-tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"></circle>
+                  <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <span class="stats-tab-label">Recent</span>
+              </button>
+              <button type="button" class="stats-view-tab" data-stats-view="daily" aria-pressed="false" aria-label="Daily">
+                <svg class="stats-tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"></rect>
+                  <path d="M8 3v4M16 3v4M4 10h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                  <rect x="8" y="13" width="3" height="3" rx="0.5" fill="currentColor"></rect>
+                </svg>
+                <span class="stats-tab-label">Daily</span>
+              </button>
+              <button type="button" class="stats-view-tab active" data-stats-view="monthly" aria-pressed="true" aria-label="Monthly">
+                <svg class="stats-tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"></rect>
+                  <path d="M8 3v4M16 3v4M4 10h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                  <path d="M8 13h2M12 13h2M16 13h2M8 17h2M12 17h2M16 17h2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+                <span class="stats-tab-label">Monthly</span>
+              </button>
             </div>
           </div>
           <div id="statsGraphLegend" class="stats-graph-legend" aria-label="Graph legend">
@@ -3313,22 +3435,22 @@
             <h3 id="settingsGeneralTitle" class="settings-section-title">General</h3>
             <div class="settings-row">
               <div>
-                <div class="settings-row-title">Show Live WPM</div>
-                <div class="settings-row-desc">Display current words per minute during typing blocks.</div>
+                <div class="settings-row-title">Show WPM</div>
+                <div class="settings-row-desc">Show WPM in typing blocks</div>
               </div>
-              <button type="button" id="liveWpmToggle" class="settings-toggle" aria-label="Show Live WPM" aria-pressed="true"></button>
+              <button type="button" id="liveWpmToggle" class="settings-toggle" aria-label="Show WPM" aria-pressed="true"></button>
             </div>
             <div class="settings-row">
               <div>
                 <div class="settings-row-title">Show Accuracy</div>
-                <div class="settings-row-desc">Display live accuracy while you type training blocks.</div>
+                <div class="settings-row-desc">Show accuracy % in typing blocks.</div>
               </div>
               <button type="button" id="accuracyToggle" class="settings-toggle" aria-label="Show Accuracy" aria-pressed="true"></button>
             </div>
             <div class="settings-row">
               <div>
                 <div id="keyboardLayoutLabel" class="settings-row-title">Keyboard Layout</div>
-                <div class="settings-row-desc">Choose the keyboard map used by heatmaps and future targeted blocks.</div>
+                <div class="settings-row-desc">Changes heatmap layout. May affect available blocks.</div>
               </div>
               <div id="keyboardLayoutDropdown" class="keyboard-dropdown">
                 <button type="button" id="keyboardLayoutButton" class="keyboard-dropdown-button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="keyboardLayoutLabel keyboardLayoutValue">
@@ -3350,7 +3472,7 @@
             <div class="settings-row">
               <div>
                 <div class="settings-row-title">Dark Mode</div>
-                <div class="settings-row-desc">Switch between the light trainer interface and a dark practice surface.</div>
+                <div class="settings-row-desc">Choose between a light or dark interface.</div>
               </div>
               <button type="button" id="themeToggle" class="settings-toggle" aria-label="Dark mode" aria-pressed="false"></button>
             </div>
@@ -3367,33 +3489,13 @@
             <h3 id="settingsDataTitle" class="settings-section-title">Data</h3>
             <div class="settings-row">
               <div>
-                <div class="settings-row-title">Sample Results</div>
-                <div class="settings-row-desc">Load a small demo typing profile and jump straight to the results screen.</div>
-              </div>
-              <button type="button" id="sampleResultsBtn" class="settings-action-btn">View Sample Results</button>
-            </div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-title">Preview Streak Animation</div>
-                <div class="settings-row-desc">Temporary test control that adds one streak day and plays the results-screen celebration.</div>
-              </div>
-              <button type="button" id="previewStreakBtn" class="settings-action-btn">Preview Streak</button>
-            </div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-title">Current Streak</div>
-                <div class="settings-row-desc">Set your streak back to 0 and mark today as not yet increased without wiping saved progress.</div>
-              </div>
-              <button type="button" id="resetStreakBtn" class="settings-action-btn">Reset Streak</button>
-            </div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-title">Saved Progress</div>
-                <div class="settings-row-desc">Wipe completed startup flow, selected typing level, session results, streaks, and typing history.</div>
+                <div class="settings-row-title">Wipe All Data</div>
+                <div class="settings-row-desc">(should) Wipe all user data; like streaks, typing history, etc.</div>
               </div>
               <button type="button" id="resetDataBtn" class="settings-danger">Wipe Data</button>
             </div>
           </section>
+          <div class="settings-footer-note">Open a ticket on GitHub or DM darkrelicer on Discord for any questions, suggestions, etc</div>
         </div>
       </div>
     </section>
@@ -3595,7 +3697,10 @@
       resultReplayTimeouts: [],
       streakCelebrationTimer: null,
       streakTypingTimers: [],
-      statsGraphView: "monthly"
+      statsGraphView: "monthly",
+      statsGraphRenderFrame: null,
+      statsGraphResizeObserver: null,
+      autoFullscreenAttempted: false
     };
     let activeScreenId = "homeScreen";
     let transitionToken = 0;
@@ -3640,9 +3745,6 @@
       secondaryBlockTitle: document.getElementById("secondaryBlockTitle"),
       secondaryBlockSubtitle: document.getElementById("secondaryBlockSubtitle"),
       settingsHomeBtn: document.getElementById("settingsHomeBtn"),
-      sampleResultsBtn: document.getElementById("sampleResultsBtn"),
-      previewStreakBtn: document.getElementById("previewStreakBtn"),
-      resetStreakBtn: document.getElementById("resetStreakBtn"),
       resetDataBtn: document.getElementById("resetDataBtn"),
       liveWpmToggle: document.getElementById("liveWpmToggle"),
       accuracyToggle: document.getElementById("accuracyToggle"),
@@ -3928,6 +4030,17 @@
       refreshFullscreenAlert();
     }
 
+    async function attemptAutoFullscreenOnce() {
+      if (runtime.autoFullscreenAttempted || isFullscreenLike()) return;
+      runtime.autoFullscreenAttempted = true;
+      try {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+        }
+      } catch (_) {}
+      refreshFullscreenAlert({ replay: true });
+    }
+
     function setKeyboardDropdownOpen(isOpen) {
       ui.keyboardLayoutDropdown.classList.toggle("open", isOpen);
       ui.keyboardLayoutButton.setAttribute("aria-expanded", String(isOpen));
@@ -3956,7 +4069,6 @@
       const target = document.getElementById(targetId);
       if (!target) return;
       if (targetId === "focusPointsScreen") renderFocusPointsPage();
-      if (targetId === "statisticsScreen") renderStatisticsPage();
       if (transitionCleanupTimer) {
         clearTimeout(transitionCleanupTimer);
         transitionCleanupTimer = null;
@@ -3976,6 +4088,10 @@
       settingsUnderlayScreenId = null;
       activeScreenId = targetId;
       updateShellForScreen(targetId);
+      if (targetId === "statisticsScreen") {
+        renderStatisticsPage();
+        scheduleStatsGraphRender();
+      }
       ui.app.classList.add("settings-active");
       window.setTimeout(() => {
         if (!ui.settingsScreen.classList.contains("settings-closing")) return;
@@ -4043,7 +4159,6 @@
       const next = document.getElementById(targetId);
       if (!next) return;
       if (targetId === "focusPointsScreen") renderFocusPointsPage();
-      if (targetId === "statisticsScreen") renderStatisticsPage();
       if (targetId === "onboardingScreen") {
         next.classList.remove("onboarding-ready-transition", "onboarding-ready-state", "onboarding-diagnostic-state");
         restoreOnboardingIntroText();
@@ -4052,6 +4167,7 @@
       const leavingSettings = activeScreenId === "settingsScreen";
       const transitionMs = 300;
       const token = ++transitionToken;
+      updateShellForScreen(targetId);
       if (transitionCleanupTimer) {
         clearTimeout(transitionCleanupTimer);
         transitionCleanupTimer = null;
@@ -4080,8 +4196,11 @@
       next.classList.remove("hidden", "slide-exit");
       next.classList.remove("settings-underlay");
       next.classList.add("transitioning", "slide-enter");
+      if (targetId === "statisticsScreen") {
+        renderStatisticsPage();
+        scheduleStatsGraphRender();
+      }
       activeScreenId = targetId;
-      updateShellForScreen(targetId);
       transitionCleanupTimer = setTimeout(() => {
         if (token !== transitionToken) return;
         if (current && !openingSettings) current.classList.add("hidden");
@@ -4127,6 +4246,7 @@
       ui.app.classList.toggle("shell-hidden", !!meta.hideShell);
       ui.app.classList.toggle("practice-shell-hidden", !!meta.slideShellAway);
       ui.app.classList.toggle("settings-active", settingsActive);
+      ui.app.classList.toggle("stats-active", metaScreenId === "statisticsScreen");
     }
 
     function hasCompletedStartup() {
@@ -5289,7 +5409,7 @@
 
     function labelDateKey(key) {
       const [year, month, day] = key.split("-").map(Number);
-      return new Date(year, month - 1, day).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      return `${month}/${day}`;
     }
 
     function labelMonthKey(key) {
@@ -5317,18 +5437,56 @@
       });
     }
 
-    function statsGridLines({ width, height, pad, maxLeft, rightStart = 90, rightSpan = 10, rightSuffix = "%" }) {
+    function formatAxisTick(value, suffix = "", precision = 1) {
+      const roundedValue = precision === 0 ? Math.round(value) : Number(value.toFixed(precision));
+      const rounded = Math.abs(roundedValue - Math.round(roundedValue)) < 0.05
+        ? String(Math.round(roundedValue))
+        : roundedValue.toFixed(precision);
+      return `${rounded}${suffix}`;
+    }
+
+    function statsGridLines({ width, height, pad, leftMin = 0, leftMax, rightMin = 90, rightMax = 100, rightSuffix = "%", leftPrecision = 0, rightPrecision = 1 }) {
       const plotH = height - pad.top - pad.bottom;
+      const leftSpan = Math.max(1, leftMax - leftMin);
+      const rightSpan = Math.max(1, rightMax - rightMin);
       return [0, 0.25, 0.5, 0.75, 1].map(step => {
         const y = pad.top + plotH - plotH * step;
-        const left = Math.round(maxLeft * step);
-        const right = Math.round(rightStart + rightSpan * step);
+        const left = leftMin + leftSpan * step;
+        const right = rightMin + rightSpan * step;
         return `
           <line class="stats-graph-grid" x1="${pad.left}" y1="${y}" x2="${width - pad.right}" y2="${y}"></line>
-          <text class="stats-graph-label" x="${pad.left - 14}" y="${y + 5}" text-anchor="end">${left}</text>
-          <text class="stats-graph-label" x="${width - pad.right + 14}" y="${y + 5}" text-anchor="start">${right}${rightSuffix}</text>
+          <text class="stats-graph-label" x="${pad.left - 14}" y="${y + 5}" text-anchor="end">${formatAxisTick(left, "", leftPrecision)}</text>
+          <text class="stats-graph-label" x="${width - pad.right + 14}" y="${y + 5}" text-anchor="start">${formatAxisTick(right, rightSuffix, rightPrecision)}</text>
         `;
       }).join("");
+    }
+
+    function adaptiveRecentScale(values, { tick = 5, minSpan = 10, floor = 0, ceiling = Infinity } = {}) {
+      const valid = values.map(Number).filter(value => Number.isFinite(value) && value >= floor && value <= ceiling);
+      if (!valid.length) return { min: floor, max: floor + minSpan };
+      const low = Math.min(...valid);
+      const high = Math.max(...valid);
+      const range = Math.max(1, high - low);
+      const padding = Math.max(tick, range * 0.1);
+      let min = Math.floor((low - padding) / tick) * tick;
+      let max = Math.ceil((high + padding) / tick) * tick;
+      min = Math.max(floor, min);
+      max = Math.min(ceiling, max);
+      if (max - min < minSpan) {
+        const needed = minSpan - (max - min);
+        const lowerRoom = Math.max(0, min - floor);
+        const upperRoom = Number.isFinite(ceiling) ? Math.max(0, ceiling - max) : needed;
+        const lowerAdd = Math.min(lowerRoom, Math.ceil(needed / 2));
+        const upperAdd = Math.min(upperRoom, needed - lowerAdd);
+        min -= lowerAdd;
+        max += upperAdd;
+        const remaining = minSpan - (max - min);
+        if (remaining > 0) {
+          if (min > floor) min = Math.max(floor, min - remaining);
+          else max = Math.min(ceiling, max + remaining);
+        }
+      }
+      return { min, max };
     }
 
     function adaptiveWpmScale(values) {
@@ -5384,28 +5542,36 @@
     }
 
     function renderPerformanceGraph(sessions, width, height, pad) {
-      const recent = sessions.slice(-20);
+      const recent = sessions.slice(-10);
+      const recentStartIndex = Math.max(0, sessions.length - recent.length);
       const plotW = width - pad.left - pad.right;
       const plotH = height - pad.top - pad.bottom;
       const count = Math.max(recent.length, 2);
-      const maxWpm = Math.max(60, Math.ceil(Math.max(...recent.map(session => Number(session.wpm || 0)), 0) / 10) * 10);
+      const wpmScale = adaptiveRecentScale(recent.map(session => Number(session.wpm || 0)), { tick: 5, minSpan: 10, floor: 0 });
+      const accuracyScale = adaptiveRecentScale(recent.map(session => Number(session.accuracy || 0)), { tick: 1, minSpan: 2, floor: 0, ceiling: 100 });
       const xFor = index => pad.left + (plotW * index) / (count - 1);
-      const yForWpm = value => pad.top + plotH - (Math.max(0, Math.min(maxWpm, value)) / maxWpm) * plotH;
-      const yForAccuracy = value => pad.top + plotH - ((Math.max(90, Math.min(100, value)) - 90) / 10) * plotH;
+      const yForWpm = value => {
+        const span = Math.max(1, wpmScale.max - wpmScale.min);
+        const normalized = (clampNumber(value, wpmScale.min, wpmScale.max) - wpmScale.min) / span;
+        return pad.top + plotH - normalized * plotH;
+      };
+      const yForAccuracy = value => {
+        const span = Math.max(1, accuracyScale.max - accuracyScale.min);
+        const normalized = (clampNumber(value, accuracyScale.min, accuracyScale.max) - accuracyScale.min) / span;
+        return pad.top + plotH - normalized * plotH;
+      };
       const wpmPoints = recent.map((session, index) => `${xFor(index).toFixed(1)},${yForWpm(Number(session.wpm || 0)).toFixed(1)}`).join(" ");
       const accuracyPoints = recent.map((session, index) => `${xFor(index).toFixed(1)},${yForAccuracy(Number(session.accuracy || 0)).toFixed(1)}`).join(" ");
       const xLabels = recent.map((session, index) => {
-        if (recent.length > 10 && index % Math.ceil(recent.length / 7) !== 0 && index !== recent.length - 1) return "";
-        return `<text class="stats-graph-label" x="${xFor(index)}" y="${height - 28}" text-anchor="middle">#${sessions.length - recent.length + index + 1}</text>`;
+        return `<text class="stats-graph-label" x="${xFor(index)}" y="${height - 28}" text-anchor="middle">#${recentStartIndex + index + 1}</text>`;
       }).join("");
       const dots = recent.map((session, index) => {
         const x = xFor(index);
         const wpm = Number(session.wpm || 0);
         const accuracy = Number(session.accuracy || 0);
-        const label = `${shortDate(session.date)} | ${Math.round(wpm)} WPM | ${Math.round(accuracy)}%`;
         return `
-          <circle class="stats-graph-dot" style="--line-color: #39e43b" cx="${x}" cy="${yForWpm(wpm)}" r="7"><title>${escapeHtml(label)}</title></circle>
-          <circle class="stats-graph-dot" style="--line-color: #4f8cff" cx="${x}" cy="${yForAccuracy(accuracy)}" r="7"><title>${escapeHtml(label)}</title></circle>
+          <circle class="stats-graph-dot" style="--line-color: #39e43b" cx="${x}" cy="${yForWpm(wpm)}" r="7" tabindex="0" data-stats-tooltip="${wpm.toFixed(1)} WPM"></circle>
+          <circle class="stats-graph-dot" style="--line-color: #4f8cff" cx="${x}" cy="${yForAccuracy(accuracy)}" r="7" tabindex="0" data-stats-tooltip="${accuracy.toFixed(1)}% Accuracy"></circle>
         `;
       }).join("");
       updateStatsGraphHeader([
@@ -5413,9 +5579,8 @@
         { label: "Accuracy", color: "#4f8cff" }
       ]);
       return `
-        <title id="statsGraphTitle">Recent WPM and accuracy</title>
         <desc id="statsGraphDesc">A line graph comparing WPM and accuracy across recent completed sessions in session order.</desc>
-        ${statsGridLines({ width, height, pad, maxLeft: maxWpm })}
+        ${statsGridLines({ width, height, pad, leftMin: wpmScale.min, leftMax: wpmScale.max, rightMin: accuracyScale.min, rightMax: accuracyScale.max })}
         <line class="stats-graph-axis" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}"></line>
         <line class="stats-graph-axis" x1="${width - pad.right}" y1="${pad.top}" x2="${width - pad.right}" y2="${height - pad.bottom}"></line>
         <line class="stats-graph-axis" x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}"></line>
@@ -5493,16 +5658,17 @@
           const ghostW = Math.max(4, barW * 0.16);
           return `
             <rect class="stats-graph-day-column" x="${center - 1}" y="${dailyPad.top}" width="2" height="${plotH}"></rect>
-            <rect class="stats-graph-ghost-bar" x="${center - ghostW / 2}" y="${height - dailyPad.bottom - 8}" width="${ghostW}" height="8"><title>${dayLabel} | no sessions</title></rect>
+            <rect class="stats-graph-ghost-bar" x="${center - ghostW / 2}" y="${height - dailyPad.bottom - 8}" width="${ghostW}" height="8"></rect>
             <text class="stats-graph-label" x="${center}" y="${height - 28}" text-anchor="middle">${dayLabel}</text>
           `;
         }
         const y = yForCount(count);
         const h = height - dailyPad.bottom - y;
         const labelY = h > 34 ? y + 24 : Math.max(dailyPad.top + 20, y - 8);
+        const blockLabel = `${count} Block${count === 1 ? "" : "s"}`;
         return `
           <rect class="stats-graph-day-column" x="${center - 1}" y="${dailyPad.top}" width="2" height="${plotH}"></rect>
-          <rect class="stats-graph-bar" style="--line-color: #39e43b" x="${x}" y="${y}" width="${barW}" height="${h}"><title>${dayLabel} | ${count} session${count === 1 ? "" : "s"} | ${Math.round(avgWpm)} avg WPM</title></rect>
+          <rect class="stats-graph-bar" style="--line-color: #39e43b" x="${x}" y="${y}" width="${barW}" height="${h}" tabindex="0" data-stats-tooltip="${blockLabel}"></rect>
           <text class="stats-graph-value" x="${center}" y="${labelY}" text-anchor="middle">${count}</text>
           <text class="stats-graph-label" x="${center}" y="${height - 28}" text-anchor="middle">${dayLabel}</text>
         `;
@@ -5512,7 +5678,6 @@
         { label: "Avg WPM trend", color: "#4f8cff" }
       ]);
       return `
-        <title id="statsGraphTitle">Daily typing activity</title>
         <desc id="statsGraphDesc">A daily activity chart with session bars and an adaptive average WPM trend line.</desc>
         ${statsDailyGridLines({ width, height, pad: dailyPad, maxCount, wpmMin: wpmScale.min, wpmMax: wpmScale.max })}
         <line class="stats-graph-axis" x1="${dailyPad.left}" y1="${dailyPad.top}" x2="${dailyPad.left}" y2="${height - dailyPad.bottom}"></line>
@@ -5523,12 +5688,19 @@
         ${dayColumns}
         ${avgEntries.length > 1 ? `<polyline class="stats-graph-line glow" style="--line-color: #4f8cff" points="${linePoints}"></polyline>` : ""}
         ${avgEntries.length === 1 ? `<line class="stats-graph-line glow" style="--line-color: #4f8cff" x1="${xFor(avgEntries[0].index) + barW * 0.18}" y1="${yForWpm(avgEntries[0].avgWpm)}" x2="${xFor(avgEntries[0].index) + barW * 0.82}" y2="${yForWpm(avgEntries[0].avgWpm)}"></line>` : ""}
+        ${avgEntries.map(entry => `<circle class="stats-graph-dot" style="--line-color: #4f8cff" cx="${xFor(entry.index) + barW / 2}" cy="${yForWpm(entry.avgWpm)}" r="7" tabindex="0" data-stats-tooltip="${entry.avgWpm.toFixed(1)} Avg WPM"></circle>`).join("")}
       `;
     }
 
     function renderActivityGraph(sessions, width, height, pad, mode) {
       const daily = mode === "daily";
-      const activityPad = daily ? pad : { ...pad, top: 50, bottom: 76, left: 58, right: 72 };
+      const activityPad = daily
+        ? pad
+        : {
+          ...pad,
+          left: Math.round(clampNumber(width * 0.045, 46, 70)),
+          right: Math.round(clampNumber(width * 0.05, 54, 76))
+        };
       const buckets = fillBuckets(daily ? dateBuckets(14) : monthBuckets(6), sessions, daily ? localDateKey : localMonthKey);
       const plotW = width - activityPad.left - activityPad.right;
       const plotH = height - activityPad.top - activityPad.bottom;
@@ -5572,7 +5744,7 @@
       const dots = buckets.map((bucket, index) => {
         const avgWpm = average(bucket.sessions, item => Number(item.wpm || 0));
         if (!bucket.sessions.length) return "";
-        return `<circle class="stats-graph-dot" style="--line-color: #4f8cff" cx="${xFor(index) + barW / 2}" cy="${yForWpm(avgWpm)}" r="7" tabindex="0" data-stats-tooltip="${Math.round(avgWpm)} Avg WPM"></circle>`;
+        return `<circle class="stats-graph-dot" style="--line-color: #4f8cff" cx="${xFor(index) + barW / 2}" cy="${yForWpm(avgWpm)}" r="7" tabindex="0" data-stats-tooltip="${avgWpm.toFixed(1)} Avg WPM"></circle>`;
       }).join("");
       updateStatsGraphHeader([
         { label: "Blocks", color: "#39e43b" },
@@ -5621,18 +5793,45 @@
       `;
     }
 
+    function statsGraphSize() {
+      const rect = ui.statsGraphSvg.getBoundingClientRect();
+      if (rect.width >= 160 && rect.height >= 100) {
+        return {
+          width: Math.round(rect.width),
+          height: Math.round(rect.height)
+        };
+      }
+      return { width: 1000, height: 560 };
+    }
+
+    function statsGraphPadFor(width, height) {
+      return {
+        left: Math.round(clampNumber(width * 0.055, 52, 82)),
+        right: Math.round(clampNumber(width * 0.06, 58, 86)),
+        top: Math.round(clampNumber(height * 0.12, 30, 42)),
+        bottom: Math.round(clampNumber(height * 0.18, 34, 66))
+      };
+    }
+
+    function scheduleStatsGraphRender() {
+      if (!ui.statsGraphSvg || runtime.statsGraphRenderFrame) return;
+      runtime.statsGraphRenderFrame = requestAnimationFrame(() => {
+        runtime.statsGraphRenderFrame = null;
+        if (activeScreenId === "statisticsScreen") renderStatisticsPage();
+      });
+    }
+
     function renderStatisticsPage() {
       if (!ui.statsGraphSvg || !ui.statsGraphCard) return;
       const sessions = validStatSessions();
-      const width = 1000;
-      const height = 560;
-      const pad = { left: 82, right: 82, top: 38, bottom: 72 };
+      const { width, height } = statsGraphSize();
+      const pad = statsGraphPadFor(width, height);
       const avgWpm = average(sessions, session => Number(session.wpm || 0));
       const avgAccuracy = average(sessions, session => Number(session.accuracy || 0));
       const topWpm = sessions.reduce((best, session) => Math.max(best, Number(session.wpm || 0)), 0);
       const currentStreak = state.streak.count || 0;
       const topStreak = Math.max(state.streak.best || 0, currentStreak);
-      const blocksCompleted = sessions.filter(session => session.type === "drill").length;
+      const blocksCompleted = sessions.filter(session => session.type === "diagnostic" || session.type === "drill").length;
       if (ui.statsAvgAccuracy) ui.statsAvgAccuracy.textContent = avgAccuracy ? `${avgAccuracy.toFixed(1)}%` : "0%";
       if (ui.statsAvgWpm) ui.statsAvgWpm.textContent = avgWpm ? String(Math.round(avgWpm)) : "0";
       if (ui.statsTopWpm) ui.statsTopWpm.textContent = topWpm ? String(Math.round(topWpm)) : "0";
@@ -5640,6 +5839,7 @@
       if (ui.statsTopStreak) ui.statsTopStreak.textContent = `${topStreak} day${topStreak === 1 ? "" : "s"}`;
       if (ui.statsBlocksCompleted) ui.statsBlocksCompleted.textContent = String(blocksCompleted);
       ui.statsGraphCard.classList.toggle("is-empty", sessions.length === 0);
+      ui.statsGraphSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
       const view = runtime.statsGraphView;
       if (view === "daily") {
@@ -6277,9 +6477,6 @@
       ui.settingsScreen.addEventListener("click", e => {
         if (!e.target.closest(".settings-shell")) closeSettings();
       });
-      ui.sampleResultsBtn.addEventListener("click", loadSampleResults);
-      ui.previewStreakBtn.addEventListener("click", previewStreakAnimation);
-      ui.resetStreakBtn.addEventListener("click", resetCurrentStreak);
       ui.resetDataBtn.addEventListener("click", resetSavedData);
       ui.liveWpmToggle.addEventListener("click", () => updateSetting("showLiveWpm", !state.settings.showLiveWpm));
       ui.accuracyToggle.addEventListener("click", () => updateSetting("showAccuracy", !state.settings.showAccuracy));
@@ -6379,14 +6576,20 @@
         refreshActiveTypingLayout();
         refreshResultsLayout();
         refreshFullscreenAlert();
+        scheduleStatsGraphRender();
       });
       document.addEventListener("fullscreenchange", () => refreshFullscreenAlert({ replay: true }));
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", () => {
           refreshActiveTypingLayout();
           refreshResultsLayout();
+          scheduleStatsGraphRender();
           refreshFullscreenAlert();
         });
+      }
+      if ("ResizeObserver" in window && ui.statsGraphSvg && !runtime.statsGraphResizeObserver) {
+        runtime.statsGraphResizeObserver = new ResizeObserver(() => scheduleStatsGraphRender());
+        runtime.statsGraphResizeObserver.observe(ui.statsGraphSvg);
       }
     }
 
@@ -6466,6 +6669,7 @@
         updateShellForScreen("welcomeScreen");
         playInitialScreenEnter("welcomeScreen");
       }
+      attemptAutoFullscreenOnce();
     }
 
     init();
