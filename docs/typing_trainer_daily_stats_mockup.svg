@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000000" flood-opacity="0.22"/>
+    </filter>
+    <linearGradient id="cardGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#3f3f3f"/>
+      <stop offset="100%" stop-color="#353535"/>
+    </linearGradient>
+    <style>
+      .bg { fill: #151515; }
+      .topbar { fill: #050505; }
+      .nav { fill: #1f1f1f; }
+      .text { fill: #f6f6f6; font-family: Inter, Arial, sans-serif; }
+      .muted { fill: #b9b9b9; font-family: Inter, Arial, sans-serif; }
+      .axis { stroke: rgba(255,255,255,.58); stroke-width: 3; vector-effect: non-scaling-stroke; }
+      .grid { stroke: rgba(255,255,255,.13); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+      .green { fill: #39e43b; }
+      .blue { fill: #4f8cff; }
+      .blue-stroke { stroke: #4f8cff; fill: none; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+      .green-stroke { stroke: #39e43b; fill: none; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+      .ghost { fill: rgba(255,255,255,.08); }
+      .card { fill: url(#cardGrad); }
+      .kpi { fill: #2f2f2f; stroke: rgba(255,255,255,.08); stroke-width: 1.5; }
+      .tab-bg { fill: #262626; stroke: rgba(255,255,255,.13); stroke-width: 2; }
+      .tab-active { fill: #4b9bff; }
+      .tab-label { font-family: Inter, Arial, sans-serif; font-weight: 800; font-size: 25px; }
+      .label { fill: #dedede; font-family: Inter, Arial, sans-serif; font-weight: 800; font-size: 18px; }
+      .small { fill: #cfcfcf; font-family: Inter, Arial, sans-serif; font-weight: 700; font-size: 16px; }
+      .value-label { fill: #ffffff; font-family: Inter, Arial, sans-serif; font-weight: 900; font-size: 22px; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" class="bg"/>
+  <rect x="0" y="0" width="1600" height="82" class="topbar"/>
+  <text x="800" y="53" text-anchor="middle" class="text" font-size="38" font-weight="700">Statistics</text>
+  <text x="64" y="54" class="text" font-size="34">⚙</text>
+  <text x="1300" y="52" class="text" font-size="33" font-weight="700">11:06 AM</text>
+  <line x1="1450" y1="23" x2="1450" y2="62" stroke="#c7bd9c" stroke-width="4"/>
+  <text x="1490" y="52" class="text" font-size="32" font-weight="800">🔥 1</text>
+
+  <rect x="82" y="114" width="270" height="96" rx="28" class="kpi"/>
+  <text x="112" y="150" class="muted" font-size="18" font-weight="800">Avg WPM</text>
+  <text x="112" y="192" class="text" font-size="42" font-weight="900">62</text>
+
+  <rect x="382" y="114" width="270" height="96" rx="28" class="kpi"/>
+  <text x="412" y="150" class="muted" font-size="18" font-weight="800">Best WPM</text>
+  <text x="412" y="192" class="text" font-size="42" font-weight="900">68</text>
+
+  <rect x="682" y="114" width="270" height="96" rx="28" class="kpi"/>
+  <text x="712" y="150" class="muted" font-size="18" font-weight="800">Avg Accuracy</text>
+  <text x="712" y="192" class="text" font-size="42" font-weight="900">98.1%</text>
+
+  <rect x="982" y="114" width="270" height="96" rx="28" class="kpi"/>
+  <text x="1012" y="150" class="muted" font-size="18" font-weight="800">Current Streak</text>
+  <text x="1012" y="192" class="text" font-size="42" font-weight="900">4 days</text>
+
+  <rect x="1282" y="114" width="236" height="96" rx="28" class="kpi"/>
+  <text x="1312" y="150" class="muted" font-size="18" font-weight="800">Sessions</text>
+  <text x="1312" y="192" class="text" font-size="42" font-weight="900">18</text>
+
+  <rect x="394" y="188" width="786" height="98" rx="49" class="tab-bg"/>
+  <text x="544.0" y="246" text-anchor="middle" fill="#b9b9b9" class="tab-label">Recent</text><rect x="636" y="206" width="126" height="62" rx="31" class="tab-active"/><text x="699.0" y="246" text-anchor="middle" fill="#071108" class="tab-label">Daily</text><text x="861.0" y="246" text-anchor="middle" fill="#b9b9b9" class="tab-label">Monthly</text><text x="1063.0" y="246" text-anchor="middle" fill="#b9b9b9" class="tab-label">Top Speeds</text>
+
+  <rect x="96" y="300" width="1408" height="560" rx="56" class="card" filter="url(#softShadow)"/>
+
+  <g transform="translate(170,348)">
+    <!-- plot dimensions: 1180 x 410 -->
+    <line x1="0" y1="0" x2="0" y2="410" class="axis"/>
+    <line x1="1180" y1="0" x2="1180" y2="410" class="axis"/>
+    <line x1="0" y1="410" x2="1180" y2="410" class="axis"/>
+
+    <!-- grid + labels left sessions 0-3, right WPM 54-68 -->
+    <line x1="0" y1="410" x2="1180" y2="410" class="grid"/>
+    <text x="-18" y="416" text-anchor="end" class="label">0</text>
+    <text x="1198" y="416" text-anchor="start" class="label">54</text>
+
+    <line x1="0" y1="273" x2="1180" y2="273" class="grid"/>
+    <text x="-18" y="279" text-anchor="end" class="label">1</text>
+    <text x="1198" y="279" text-anchor="start" class="label">59</text>
+
+    <line x1="0" y1="137" x2="1180" y2="137" class="grid"/>
+    <text x="-18" y="143" text-anchor="end" class="label">2</text>
+    <text x="1198" y="143" text-anchor="start" class="label">64</text>
+
+    <line x1="0" y1="0" x2="1180" y2="0" class="grid"/>
+    <text x="-18" y="6" text-anchor="end" class="label">3</text>
+    <text x="1198" y="6" text-anchor="start" class="label">68</text>
+
+    <text x="0" y="-22" text-anchor="start" class="label">Sessions</text>
+    <text x="1180" y="-22" text-anchor="end" class="label">Avg WPM</text>
+
+    <!-- background columns -->
+    <g opacity="1">
+      <rect x="14" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="103" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="192" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="281" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="370" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="459" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="548" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="637" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="726" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="815" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="904" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="993" y="0" width="54" height="410" rx="27" class="ghost"/>
+      <rect x="1082" y="0" width="54" height="410" rx="27" class="ghost"/>
+    </g>
+
+    <!-- sessions bars: 0,1,0,2,1,0,1,2,1,3,2,1,2 -->
+    <rect x="103" y="273" width="54" height="137" rx="8" class="green"/>
+    <rect x="281" y="137" width="54" height="273" rx="8" class="green"/>
+    <rect x="370" y="273" width="54" height="137" rx="8" class="green"/>
+    <rect x="548" y="273" width="54" height="137" rx="8" class="green"/>
+    <rect x="637" y="137" width="54" height="273" rx="8" class="green"/>
+    <rect x="726" y="273" width="54" height="137" rx="8" class="green"/>
+    <rect x="815" y="0" width="54" height="410" rx="8" class="green"/>
+    <rect x="904" y="137" width="54" height="273" rx="8" class="green"/>
+    <rect x="993" y="273" width="54" height="137" rx="8" class="green"/>
+    <rect x="1082" y="137" width="54" height="273" rx="8" class="green"/>
+
+    <!-- average WPM line mapped to right axis 54-68 -->
+    <polyline points="130,284 308,230 397,245 575,201 664,174 753,196 842,120 931,85 1020,168 1109,142" class="blue-stroke"/>
+    <g>
+      <circle cx="130" cy="284" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="308" cy="230" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="397" cy="245" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="575" cy="201" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="664" cy="174" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="753" cy="196" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="842" cy="120" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="931" cy="85" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="1020" cy="168" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+      <circle cx="1109" cy="142" r="10" fill="#3a3a3a" stroke="#4f8cff" stroke-width="7"/>
+    </g>
+
+    <!-- x labels thinned -->
+    <text x="41" y="462" text-anchor="middle" class="small">May 12</text>
+    <text x="219" y="462" text-anchor="middle" class="small">May 14</text>
+    <text x="397" y="462" text-anchor="middle" class="small">May 16</text>
+    <text x="575" y="462" text-anchor="middle" class="small">May 18</text>
+    <text x="753" y="462" text-anchor="middle" class="small">May 20</text>
+    <text x="931" y="462" text-anchor="middle" class="small">May 22</text>
+    <text x="1109" y="462" text-anchor="middle" class="small">May 24</text>
+  </g>
+
+  <g transform="translate(620,805)">
+    <circle cx="0" cy="0" r="11" class="green"/>
+    <text x="26" y="7" class="label">Sessions</text>
+    <circle cx="175" cy="0" r="11" class="blue"/>
+    <text x="201" y="7" class="label">Avg WPM</text>
+  </g>
+
+  <rect x="0" y="908" width="1600" height="92" class="nav"/>
+  <line x1="0" y1="908" x2="1600" y2="908" stroke="#6f6f6f"/>
+  <text x="285" y="970" text-anchor="middle" class="text" font-size="45">Home</text>
+  <text x="770" y="970" text-anchor="middle" class="text" font-size="45">Focus Points</text>
+  <rect x="1064" y="922" width="452" height="68" rx="24" fill="#343434"/>
+  <text x="1290" y="970" text-anchor="middle" class="text" font-size="45">Statistics</text>
+
+</svg>
