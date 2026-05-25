@@ -272,6 +272,34 @@
       font-weight: 600;
       letter-spacing: 0;
       text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .top-help-btn {
+      width: 26px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      background: transparent;
+      color: currentColor;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 0;
+    }
+    .top-help-btn[hidden] {
+      display: none !important;
+    }
+    .top-help-btn:hover,
+    .top-help-btn:focus-visible {
+      background: rgba(255, 255, 255, 0.16);
+      transform: none;
     }
     .top-status {
       justify-self: end;
@@ -1998,6 +2026,9 @@
     .results-screen.help-open > :not(.result-help-backdrop) {
       filter: blur(2px);
     }
+    .focus-dashboard-screen.help-open > :not(.result-help-backdrop) {
+      filter: blur(2px);
+    }
     .result-help-backdrop.visible {
       opacity: 1;
       pointer-events: auto;
@@ -3311,7 +3342,10 @@
           <span>Please Fullscreen!</span>
         </button>
       </div>
-      <div id="topTitle" class="top-title">Available Blocks</div>
+      <div id="topTitle" class="top-title">
+        <span id="topTitleText">Available Blocks</span>
+        <button type="button" id="focusHelpBtn" class="top-help-btn" aria-label="How Focus Points works" hidden>?</button>
+      </div>
       <div class="top-status" aria-label="Current time and streak">
         <span id="topTime" class="top-status-item">--:--</span>
         <span class="top-sep">|</span>
@@ -3356,6 +3390,15 @@
         </div>
         <div class="focus-heatmap-area">
           <div id="focusKeyboardMap" class="keyboard focus-keyboard" aria-label="Focus key heatmap"></div>
+        </div>
+      </div>
+      <div id="focusHelpBackdrop" class="result-help-backdrop" hidden>
+        <div class="result-help-dialog" role="dialog" aria-modal="true" aria-labelledby="focusHelpTitle">
+          <h3 id="focusHelpTitle">Focus Points?</h3>
+          <p>
+            <strong>Focus Points use your total average across all completed blocks.</strong><br><br>
+            The slowest keys, slowest bigrams, and keyboard heatmap on this page are determined from ALL typing data, not just the block you finished most recently. The results page shows the current block only; Focus Points shows the overall patterns Typing Trainer thinks are worth practicing next.
+          </p>
         </div>
       </div>
     </section>
@@ -3575,7 +3618,7 @@
           <h3 id="resultHelpTitle">Rhythm Spikes?</h3>
           <p>
             <strong>The rhythm spike counter is incremented when:</strong><br><br>
-            it is not the first keypress, the current expected character is not a space, the previous accepted character was not a space, and the time since the previous keypress is over 300ms. TLDR; it means <strong>the time between key presses is long.</strong> Each spike subtracts 1.2 from the total score up to a max of -20 points.
+            it is not the first keypress, the current expected character is not a space, the previous accepted character was not a space, and the time since the previous keypress is noticeably slower than your average key timing for this block. TLDR; it means <strong>the time between key presses is unusually long for your pace.</strong> Each spike subtracts 1.2 from the total score up to a max of -20 points.
           </p>
         </div>
       </div>
@@ -3710,6 +3753,8 @@
     const ui = {
       app: document.querySelector(".app"),
       topTitle: document.getElementById("topTitle"),
+      topTitleText: document.getElementById("topTitleText"),
+      focusHelpBtn: document.getElementById("focusHelpBtn"),
       topTime: document.getElementById("topTime"),
       topStreakItem: document.getElementById("topStreakItem"),
       topStreakIcon: document.getElementById("topStreakIcon"),
@@ -3721,6 +3766,7 @@
       navStatsBtn: document.getElementById("navStatsBtn"),
       homeScreen: document.getElementById("homeScreen"),
       focusPointsScreen: document.getElementById("focusPointsScreen"),
+      focusHelpBackdrop: document.getElementById("focusHelpBackdrop"),
       statisticsScreen: document.getElementById("statisticsScreen"),
       focusKeysList: document.getElementById("focusKeysList"),
       focusBigramsList: document.getElementById("focusBigramsList"),
@@ -4238,7 +4284,10 @@
       const settingsActive = screenId === "settingsScreen";
       const metaScreenId = settingsActive && settingsUnderlayScreenId ? settingsUnderlayScreenId : screenId;
       const meta = SCREEN_META[metaScreenId] || SCREEN_META.homeScreen;
-      ui.topTitle.textContent = meta.title;
+      const showFocusHelp = screenId === "focusPointsScreen";
+      ui.topTitleText.textContent = meta.title;
+      ui.focusHelpBtn.hidden = !showFocusHelp;
+      if (!showFocusHelp) setFocusHelpOpen(false);
       const active = meta.nav;
       ui.navHomeBtn.classList.toggle("active", active === "home");
       ui.navFocusBtn.classList.toggle("active", active === "focus");
@@ -4411,7 +4460,7 @@
     function previewStreakAnimation() {
       const award = awardDailyStreak({ force: true });
       if (!state.results || !Object.keys(state.results).length) {
-        state.results = summarizeResults(0, 100, 0);
+        state.results = summarizeResults(0, 100, null);
       }
       renderResults();
       switchPhase("results");
@@ -4573,7 +4622,17 @@
         rhythmSpikes: 5
       };
       state.stats.sessions = [record];
-      state.results = summarizeResults(record.wpm, record.accuracy, record.rhythmSpikes);
+      state.results = {
+        ...summarizeResults(record.wpm, record.accuracy, record.rhythmSpikes),
+        blockMetrics: {
+          keySpeed: { ...state.stats.keySpeed },
+          bigramSpeed: { ...state.stats.bigramSpeed },
+          errors: { ...state.stats.errors },
+          averageMs: metricAverage(state.stats.keySpeed)
+        },
+        slowKeys: getSlowKeys(5),
+        slowBigrams: getSlowBigrams(5)
+      };
       state.keystrokes = [];
       state.startTime = null;
       state.phase = "results";
@@ -4892,11 +4951,8 @@
       if (state.startTime === null) state.startTime = t;
       const dt = runtime.lastCharTime === null ? 0 : t - runtime.lastCharTime;
       const key = toLetter(expected);
-      if (runtime.lastCharTime !== null && expected !== " " && runtime.lastAcceptedChar !== " " && dt > 300) {
-        runtime.rhythmSpikes += 1;
-      }
-      if (isCorrect && key) addMetric(state.stats.keySpeed, key, dt);
-      if (isCorrect && isRegularLetter(runtime.lastAcceptedChar) && isRegularLetter(key)) addMetric(state.stats.bigramSpeed, `${runtime.lastAcceptedChar}${key}`, dt);
+      if (isCorrect && key && dt > 0) addMetric(state.stats.keySpeed, key, dt);
+      if (isCorrect && dt > 0 && isRegularLetter(runtime.lastAcceptedChar) && isRegularLetter(key)) addMetric(state.stats.bigramSpeed, `${runtime.lastAcceptedChar}${key}`, dt);
       if (!isCorrect && key) state.stats.errors[key] = (state.stats.errors[key] || 0) + 1;
       state.keystrokes.push({ t, dt, expected, actual, correct: isCorrect });
       runtime.lastCharTime = t;
@@ -4908,8 +4964,8 @@
       const t = now();
       const dt = runtime.lastCharTime === null ? 0 : t - runtime.lastCharTime;
       const key = toLetter(expected);
-      if (isCorrect && key) addMetric(state.stats.keySpeed, key, dt);
-      if (isCorrect && isRegularLetter(runtime.lastAcceptedChar) && isRegularLetter(key)) addMetric(state.stats.bigramSpeed, `${runtime.lastAcceptedChar}${key}`, dt);
+      if (isCorrect && key && dt > 0) addMetric(state.stats.keySpeed, key, dt);
+      if (isCorrect && dt > 0 && isRegularLetter(runtime.lastAcceptedChar) && isRegularLetter(key)) addMetric(state.stats.bigramSpeed, `${runtime.lastAcceptedChar}${key}`, dt);
       if (!isCorrect && key) state.stats.errors[key] = (state.stats.errors[key] || 0) + 1;
       runtime.lastCharTime = t;
       if (isCorrect) runtime.lastAcceptedChar = isRegularLetter(key) ? key : "";
@@ -4918,12 +4974,116 @@
       return t;
     }
 
-    function summarizeResults(wpm, accuracy, rhythmSpikes) {
-      const slowKeys = getSlowKeys(5);
-      const slowBigrams = getSlowBigrams(5);
-      const spikes = rhythmSpikes || 0;
+    function timingAllowanceForAverage(avgMs) {
+      if (!Number.isFinite(avgMs) || avgMs <= 0) return 125;
+      return Math.max(100, Math.min(150, avgMs * 0.35));
+    }
+
+    function rhythmSpikeThresholdForAverage(avgMs) {
+      if (!Number.isFinite(avgMs) || avgMs <= 0) return 420;
+      return avgMs + Math.max(180, Math.min(320, avgMs * 0.75));
+    }
+
+    function heatmapScaleForMetrics(keySpeed = {}) {
+      const values = Object.entries(keySpeed)
+        .map(([key, metric]) => ({ key, ms: avgFromMetric(metric) }))
+        .filter(item => isRegularLetter(item.key) && Number.isFinite(item.ms) && item.ms > 0)
+        .sort((a, b) => b.ms - a.ms);
+      const markedCount = Math.min(5, values.length);
+      const marked = values.slice(0, markedCount);
+      const sortedMs = values.map(item => item.ms).sort((a, b) => a - b);
+      const medianMs = sortedMs.length ? sortedMs[Math.floor(sortedMs.length / 2)] : 0;
+      const redThreshold = medianMs + Math.max(85, medianMs * 0.65);
+      const redKeys = new Set(
+        marked
+          .filter(item => item.ms >= redThreshold)
+          .map(item => item.key)
+      );
+      const yellowKeys = new Set(
+        marked
+          .filter(item => !redKeys.has(item.key))
+          .map(item => item.key)
+      );
+      return { redKeys, yellowKeys };
+    }
+
+    function metricAverage(map) {
+      let total = 0;
+      let count = 0;
+      Object.values(map || {}).forEach(metric => {
+        if (!metric || !Number.isFinite(Number(metric.total)) || !Number.isFinite(Number(metric.count))) return;
+        total += Number(metric.total);
+        count += Number(metric.count);
+      });
+      return count ? total / count : 0;
+    }
+
+    function buildBlockTimingMetrics(events = state.keystrokes) {
+      const keySpeed = {};
+      const bigramSpeed = {};
+      const errors = {};
+      let lastAcceptedKey = "";
+      (events || []).forEach(event => {
+        if (!event) return;
+        const key = toLetter(event.expected);
+        const dt = Number(event.dt || 0);
+        if (!event.correct) {
+          if (key) errors[key] = (errors[key] || 0) + 1;
+          return;
+        }
+        if (key && dt > 0) addMetric(keySpeed, key, dt);
+        if (dt > 0 && isRegularLetter(lastAcceptedKey) && isRegularLetter(key)) {
+          addMetric(bigramSpeed, `${lastAcceptedKey}${key}`, dt);
+        }
+        lastAcceptedKey = isRegularLetter(key) ? key : "";
+      });
+      return { keySpeed, bigramSpeed, errors, averageMs: metricAverage(keySpeed) };
+    }
+
+    function slowKeysFromMetrics(metrics = {}, limit = 5) {
+      return Object.entries(metrics.keySpeed || {})
+        .map(([k, v]) => ({
+          k,
+          ms: avgFromMetric(v),
+          errors: (metrics.errors || {})[k] || 0
+        }))
+        .filter(item => isRegularLetter(item.k))
+        .sort((a, b) => (b.ms || 0) - (a.ms || 0) || (b.errors || 0) - (a.errors || 0))
+        .slice(0, limit);
+    }
+
+    function slowBigramsFromMetrics(metrics = {}, limit = 5) {
+      return Object.entries(metrics.bigramSpeed || {})
+        .map(([k, v]) => ({ k, ms: avgFromMetric(v), errors: 0 }))
+        .filter(item => /^[a-z]{2}$/.test(item.k))
+        .sort((a, b) => (b.ms || 0) - (a.ms || 0))
+        .slice(0, limit);
+    }
+
+    function countRhythmSpikes(metrics = {}, events = state.keystrokes) {
+      const averageMs = Number(metrics.averageMs || metricAverage(metrics.keySpeed || {}));
+      if (!Number.isFinite(averageMs) || averageMs <= 0) return 0;
+      const threshold = rhythmSpikeThresholdForAverage(averageMs);
+      let spikes = 0;
+      let lastAcceptedKey = "";
+      (events || []).forEach(event => {
+        if (!event || !event.correct) return;
+        const key = toLetter(event.expected);
+        const dt = Number(event.dt || 0);
+        if (dt > threshold && isRegularLetter(lastAcceptedKey) && isRegularLetter(key)) spikes += 1;
+        lastAcceptedKey = isRegularLetter(key) ? key : "";
+      });
+      return spikes;
+    }
+
+    function summarizeResults(wpm, accuracy, rhythmSpikes, sourceEvents = state.keystrokes) {
+      const blockMetrics = buildBlockTimingMetrics(sourceEvents);
+      const slowKeys = slowKeysFromMetrics(blockMetrics, 5);
+      const slowBigrams = slowBigramsFromMetrics(blockMetrics, 5);
+      const hasProvidedSpikes = rhythmSpikes !== null && rhythmSpikes !== undefined && Number.isFinite(Number(rhythmSpikes));
+      const spikes = hasProvidedSpikes ? Number(rhythmSpikes) : countRhythmSpikes(blockMetrics, sourceEvents);
       const instability = spikes > 8 ? "Unstable" : spikes > 3 ? "Moderate" : "Stable";
-      return { wpm, accuracy, slowKeys, slowBigrams, rhythmSpikes: spikes, instability };
+      return { wpm, accuracy, slowKeys, slowBigrams, rhythmSpikes: spikes, instability, blockMetrics };
     }
 
     function calculateResultScoreParts(results = {}) {
@@ -4978,16 +5138,16 @@
       const wpm = computeWpm(correct, elapsed);
       const acc = total ? (correct / total) * 100 : 100;
 
-      state.results = summarizeResults(wpm, acc, runtime.rhythmSpikes);
+      const resultSummary = summarizeResults(wpm, acc, null);
+      state.results = resultSummary;
       captureResultReplayEvents();
       runtime.homeRecommendCuePending = true;
-
       const record = {
         date: new Date().toISOString(),
         type: "diagnostic",
         wpm,
         accuracy: acc,
-        rhythmSpikes: runtime.rhythmSpikes
+        rhythmSpikes: resultSummary.rhythmSpikes
       };
       state.stats.sessions.push(record);
       localStorage.setItem(STARTUP_COMPLETE_KEY, "true");
@@ -5095,7 +5255,7 @@
       const hasReplayEvents = runtime.resultReplayEvents.length > 0;
       const events = hasReplayEvents
         ? runtime.resultReplayEvents.slice()
-        : Object.keys(state.stats.keySpeed || {}).map((key, index) => ({ key, t: index }));
+        : Object.keys((state.results.blockMetrics || {}).keySpeed || {}).map((key, index) => ({ key, t: index }));
       const firstT = events.length ? events[0].t : 0;
       const lastT = events.length ? Math.max(firstT + 1, events[events.length - 1].t) : firstT + 1;
       const span = Math.max(1, lastT - firstT);
@@ -5121,7 +5281,7 @@
       runtime.resultReplayTimer = window.setTimeout(() => {
         if (!hasReplayEvents) {
           keys.forEach(key => {
-            if ((state.stats.keySpeed || {})[key.dataset.key] && !replayed.has(key.dataset.key)) {
+            if (((state.results.blockMetrics || {}).keySpeed || {})[key.dataset.key] && !replayed.has(key.dataset.key)) {
               key.classList.add("replayed");
             }
           });
@@ -5185,29 +5345,50 @@
       }, 190);
     }
 
-    function colorForMs(ms) {
-      if (ms === null || ms === undefined) return "#192338";
-      if (ms < 160) return "#1f6f46";
-      if (ms < 260) return "#6a5e1a";
-      return "#742a2a";
+    function setFocusHelpOpen(open) {
+      if (!ui.focusHelpBackdrop) return;
+      if (open) {
+        ui.focusHelpBackdrop.hidden = false;
+        requestAnimationFrame(() => {
+          ui.focusPointsScreen.classList.add("help-open");
+          ui.focusHelpBackdrop.classList.add("visible");
+        });
+        return;
+      }
+      ui.focusPointsScreen.classList.remove("help-open");
+      ui.focusHelpBackdrop.classList.remove("visible");
+      window.setTimeout(() => {
+        if (!ui.focusHelpBackdrop.classList.contains("visible")) {
+          ui.focusHelpBackdrop.hidden = true;
+        }
+      }, 190);
     }
 
-    function renderKeyboardMap(targetEl) {
+    function colorForMs(ms, key = "", scale = null) {
+      if (ms === null || ms === undefined) return "#192338";
+      if (scale && scale.redKeys && scale.redKeys.has(key)) return "#742a2a";
+      if (scale && scale.yellowKeys && scale.yellowKeys.has(key)) return "#6a5e1a";
+      return "#1f6f46";
+    }
+
+    function renderKeyboardMap(targetEl, metrics = state.stats) {
       if (!targetEl) return;
       targetEl.innerHTML = "";
       const flipKeys = targetEl.classList.contains("focus-keyboard") || targetEl.classList.contains("results-keyboard");
       const isResultsKeyboard = targetEl.classList.contains("results-keyboard");
+      const keySpeed = metrics && metrics.keySpeed ? metrics.keySpeed : {};
+      const heatmapScale = heatmapScaleForMetrics(keySpeed);
       let revealIndex = 0;
       currentKeyboardRows().forEach((row, rowIndex) => {
         const rowEl = document.createElement("div");
         rowEl.className = `keyboard-row ${rowIndex === 0 ? "top-row" : rowIndex === 1 ? "home-row" : "bottom-row"}`;
         row.split("").forEach(ch => {
-          const ms = meanMetric(state.stats.keySpeed, ch);
+          const ms = meanMetric(keySpeed, ch);
           const hasMs = Number.isFinite(ms) && ms > 0;
           const el = document.createElement("div");
           el.className = "key";
           el.dataset.key = ch;
-          el.style.setProperty("--key-color", colorForMs(hasMs ? ms : null));
+          el.style.setProperty("--key-color", colorForMs(hasMs ? ms : null, ch, heatmapScale));
           el.style.setProperty("--reveal-index", String(revealIndex));
           if (!isResultsKeyboard) el.classList.add("replayed");
           if (flipKeys) {
@@ -5229,27 +5410,15 @@
     }
 
     function renderKeyboardHeatmap() {
-      renderKeyboardMap(ui.keyboardMap);
+      renderKeyboardMap(ui.keyboardMap, state.results.blockMetrics || {});
     }
 
     function getSlowKeys(limit = 5) {
-      return Object.entries(state.stats.keySpeed || {})
-        .map(([k, v]) => ({
-          k,
-          ms: avgFromMetric(v),
-          errors: (state.stats.errors || {})[k] || 0
-        }))
-        .filter(item => isRegularLetter(item.k))
-        .sort((a, b) => (b.ms || 0) - (a.ms || 0) || (b.errors || 0) - (a.errors || 0))
-        .slice(0, limit);
+      return slowKeysFromMetrics(state.stats, limit);
     }
 
     function getSlowBigrams(limit = 5) {
-      return Object.entries(state.stats.bigramSpeed || {})
-        .map(([k, v]) => ({ k, ms: avgFromMetric(v), errors: 0 }))
-        .filter(item => /^[a-z]{2}$/.test(item.k))
-        .sort((a, b) => (b.ms || 0) - (a.ms || 0))
-        .slice(0, limit);
+      return slowBigramsFromMetrics(state.stats, limit);
     }
 
     function pruneInvalidBigrams() {
@@ -6326,16 +6495,18 @@
       const elapsed = runtime.drillStart ? now() - runtime.drillStart : 0;
       const wpm = computeWpm(runtime.drillCorrect, elapsed);
       const acc = runtime.drillTotal ? (runtime.drillCorrect / runtime.drillTotal) * 100 : 100;
+      const resultSummary = summarizeResults(wpm, acc, null);
       const record = {
         date: new Date().toISOString(),
         type: "drill",
         blockType: state.activeBlockType,
         wpm,
         accuracy: acc,
-        correctChars: runtime.drillCorrect
+        correctChars: runtime.drillCorrect,
+        rhythmSpikes: resultSummary.rhythmSpikes
       };
       state.stats.sessions.push(record);
-      state.results = summarizeResults(wpm, acc, state.results.rhythmSpikes || 0);
+      state.results = resultSummary;
       const streakAward = awardDailyStreak();
       captureResultReplayEvents();
       runtime.homeRecommendCuePending = true;
@@ -6550,11 +6721,19 @@
           e.preventDefault();
           setResultHelpOpen(false);
         }
+        if ((e.key === "Escape" || e.key === "Esc") && ui.focusHelpBackdrop && ui.focusHelpBackdrop.classList.contains("visible")) {
+          e.preventDefault();
+          setFocusHelpOpen(false);
+        }
       });
       ui.resultMoreBtn.addEventListener("click", toggleResultsExpanded);
+      ui.focusHelpBtn.addEventListener("click", () => setFocusHelpOpen(true));
       ui.rhythmHelpBtn.addEventListener("click", () => setResultHelpOpen(true));
       ui.resultHelpBackdrop.addEventListener("click", e => {
         if (e.target === ui.resultHelpBackdrop) setResultHelpOpen(false);
+      });
+      ui.focusHelpBackdrop.addEventListener("click", e => {
+        if (e.target === ui.focusHelpBackdrop) setFocusHelpOpen(false);
       });
       ui.startDrillsBtn.addEventListener("click", goHome);
       ui.drillExitBtn.addEventListener("click", exitDrillSession);
@@ -6631,10 +6810,6 @@
       loadState();
       renderSettingsControls();
       pruneInvalidBigrams();
-      if (state.results && Object.keys(state.results).length) {
-        state.results.slowKeys = getSlowKeys(5);
-        state.results.slowBigrams = getSlowBigrams(5);
-      }
       bind();
       resetDiagnostic();
       if (state.results && Object.keys(state.results).length) {
