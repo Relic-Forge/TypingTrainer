@@ -7,8 +7,8 @@ TypingTrainer is a single-file static typing practice app. Open
 
 - Home screen with available training blocks, a recommended block, top status
   bar, and bottom navigation.
-- Focus Points and Statistics placeholder screens.
-- Results screen with a single `Back to Home` action.
+- Focus Points and Statistics info screens.
+- Results screen with a detailed breakdown.
 - Settings screen opened from the gear button.
 
 ## Settings
