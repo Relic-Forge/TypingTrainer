@@ -25,7 +25,7 @@ Typing Trainer stores progress and settings in the browser's `localStorage`. Dat
 
 ## Support
 
-Suggestions, bugs, or anything else can be sent on the GitHub page or sent to darkrelicer on Discord.
+Suggestions, bugs, or anything else can be sent on the GitHub.
 
 ## License
 
