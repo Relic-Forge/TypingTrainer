@@ -6,10 +6,13 @@ Try it here: https://relic-forge.github.io/TypingTrainer/
 
 ## Features
 
-- Personalized typing blocks based on recent performance patterns.
+- A short placement test, then personalized practice blocks built from your slowest keys and letter pairs.
+- Drills made of real, hand-written sentences chosen to cover the keys and pairs you need to work on.
+- Results screen with a score, a keyboard speed heatmap, comparison with your recent average, and one-key next steps (next block, retry, or home).
 - Focus Points and Statistics screens for weak keys, bigrams, and progress trends.
-- Results screen with speed, accuracy, consistency, and improvement details.
-- Settings for live WPM, accuracy visibility, keyboard layout, appearance, and saved data.
+- A daily streak that counts both the placement test and practice blocks.
+- Keyboard-friendly throughout: arrow keys switch tabs, `,` opens Settings, and the full shortcut list is in Settings.
+- Light and dark mode, plus settings for live WPM, live accuracy, keyboard layout (QWERTY, Dvorak, Colemak, AZERTY), and saved data.
 - Local-only persistence through browser `localStorage`.
 
 ## Run Locally

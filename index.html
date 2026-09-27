@@ -6,7 +6,7 @@
   <title>Typing Trainer</title>
   <meta name="description" content="Typing Trainer is a browser-based typing practice app that studies your weak spots and turns them into focused training blocks." />
   <meta name="application-name" content="Typing Trainer" />
-  <meta name="theme-color" content="#2f71d8" />
+  <meta name="theme-color" content="#5b54e8" />
   <link rel="canonical" href="https://relic-forge.github.io/TypingTrainer/" />
   <meta property="og:title" content="Typing Trainer" />
   <meta property="og:description" content="Practice typing with focused blocks, detailed results, weak-spot analysis, and saved local progress." />
@@ -16,7 +16,7 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Typing Trainer" />
   <meta name="twitter:description" content="A static typing practice app with focused drills, progress tracking, and keyboard-layout settings." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f71d8'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='24' font-weight='700' fill='white'%3ETT%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%235b54e8'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='24' font-weight='700' fill='white'%3ETT%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
@@ -41,7 +41,7 @@
       --bad: #d34545;
       --border: #dfe2ea;
       --border-strong: #c5c9d6;
-      --focus-ring: color-mix(in srgb, var(--accent) 55%, transparent);
+      --focus-ring: var(--accent);
       --topbar-bg: var(--app-bg);
       --topbar-text: var(--text);
       --nav-bg: var(--app-bg);
@@ -86,6 +86,9 @@
       --typing-screen-pad-top: clamp(36px, 7vh, 72px);
       --typing-font-size: clamp(20px, 1.6vw, 25px);
       --screen-slide: 300px;
+      --scrollbar-thumb: color-mix(in srgb, var(--text) 22%, transparent);
+      --scrollbar-thumb-hover: color-mix(in srgb, var(--text) 36%, transparent);
+      color-scheme: light;
     }
     html[data-theme="dark"] {
       --bg: #131419;
@@ -117,11 +120,30 @@
       --drill-typing-bad: #f08e91;
       --caret-bad-bg: #5a2a2e;
       --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.24);
+      color-scheme: dark;
     }
     * { box-sizing: border-box; }
     html {
       height: 100%;
       overflow: hidden;
+      /* Native scrollbars, recolored to match the theme (inherited by every scroller). */
+      scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      background-clip: padding-box;
+      border: 3px solid transparent;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: var(--scrollbar-thumb-hover);
     }
     body {
       margin: 0;
@@ -355,24 +377,165 @@
       line-height: 1;
       white-space: nowrap;
     }
+    /* Streak flame: unlit silhouette -> ignition -> seamless candle-like idle loop. */
     .top-streak-icon {
+      position: relative;
       display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 1em;
-      height: 1em;
-      line-height: 1;
-      filter: grayscale(1) saturate(0.3);
-      opacity: 0.48;
-      transform-origin: 50% 80%;
-      transition: filter 240ms ease, opacity 240ms ease, transform 240ms ease;
+      width: 1.25em;
+      height: 1.55em;
+      margin: -0.25em -0.1em -0.15em;
     }
-    .top-status-item.streak-lit .top-streak-icon {
-      filter: grayscale(0) saturate(1.4);
+    /* WebGL flame (when available) replaces the SVG, which stays as the fallback. */
+    .top-streak-icon canvas {
+      position: absolute;
+      pointer-events: none;
+    }
+    .top-streak-icon.flame-webgl .flame-svg {
+      display: none;
+    }
+    .flame-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .flame-svg * {
+      transform-box: view-box;
+    }
+    .flame-off {
+      fill: var(--subtle);
+      opacity: 0.75;
+      transform-origin: 12px 27px;
+    }
+    .flame-lit,
+    .flame-sway,
+    .flame-body {
+      transform-origin: 12px 27.5px;
+    }
+    .flame-core {
+      transform-origin: 12px 26px;
+    }
+    .flame-lit,
+    .flame-glow,
+    .flame-burst,
+    .flame-ember,
+    .flame-spark {
+      opacity: 0;
+    }
+    .flame-glow,
+    .flame-burst {
+      transform-origin: 12px 20px;
+    }
+    .flame-ember {
+      transform-origin: 12px 24.5px;
+    }
+    .flame-spark {
+      fill: #ffc14d;
+    }
+    .streak-lit .flame-off {
+      opacity: 0;
+    }
+    .streak-lit .flame-lit {
       opacity: 1;
     }
-    .top-status-item.streak-lighting .top-streak-icon {
-      animation: streakFireLight 1100ms ease-out both;
+    .streak-lit .flame-glow {
+      opacity: 0.8;
+      animation: flameGlow 2.9s ease-in-out infinite;
+    }
+    /* Three loops with unrelated periods so the motion never visibly repeats. */
+    .streak-lit .flame-sway {
+      animation: flameSway 3.7s ease-in-out infinite;
+    }
+    .streak-lit .flame-body {
+      animation: flameStretch 1.9s ease-in-out infinite;
+    }
+    .streak-lit .flame-core {
+      animation: flameCore 1.3s ease-in-out infinite;
+    }
+    /* Held unlit between the streak being awarded and the celebration starting. */
+    .streak-pending .flame-off {
+      opacity: 0.75;
+    }
+    .streak-pending .flame-lit,
+    .streak-pending .flame-glow {
+      opacity: 0;
+      animation: none;
+    }
+    .streak-lighting .flame-off {
+      animation: flameOffIgnite 1500ms ease-out 300ms both;
+    }
+    .streak-lighting .flame-ember {
+      animation: flameEmber 1500ms ease-out 300ms both;
+    }
+    .streak-lighting .flame-lit {
+      animation: flameIgnite 1500ms cubic-bezier(0.2, 0.8, 0.2, 1) 300ms both;
+    }
+    .streak-lighting .flame-glow {
+      animation: flameGlowIn 1500ms ease-out 300ms both;
+    }
+    .streak-lighting .flame-burst {
+      animation: flameBurst 1500ms ease-out 300ms both;
+    }
+    .streak-lighting .flame-spark {
+      animation: flameSpark 1500ms ease-out calc(300ms + var(--delay)) both;
+    }
+    @keyframes flameSway {
+      0%, 100% { transform: rotate(-1.4deg) skewX(0.8deg); }
+      50% { transform: rotate(1.6deg) skewX(-1deg); }
+    }
+    @keyframes flameStretch {
+      0%, 100% { transform: scale(1, 1); }
+      18% { transform: scale(0.97, 1.05); }
+      37% { transform: scale(1.02, 0.97); }
+      55% { transform: scale(0.98, 1.06); }
+      72% { transform: scale(1.01, 0.99); }
+      86% { transform: scale(0.99, 1.03); }
+    }
+    @keyframes flameCore {
+      0%, 100% { transform: scale(1, 1) translateY(0); }
+      30% { transform: scale(0.94, 1.09) translateY(-0.3px); }
+      62% { transform: scale(1.04, 0.95) translateY(0.2px); }
+    }
+    @keyframes flameGlow {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      40% { opacity: 0.55; transform: scale(0.94); }
+      70% { opacity: 0.72; transform: scale(1.04); }
+    }
+    @keyframes flameOffIgnite {
+      0% { opacity: 0.75; transform: scale(1); }
+      14% { opacity: 0.75; transform: scale(1.06, 0.92); }
+      24% { opacity: 0.4; transform: scale(0.96, 1.02); }
+      34%, 100% { opacity: 0; transform: scale(0.7); }
+    }
+    @keyframes flameEmber {
+      0% { opacity: 0; transform: scale(0.2); }
+      10% { opacity: 1; transform: scale(1.3); }
+      18% { opacity: 1; transform: scale(0.9); }
+      26% { opacity: 1; transform: scale(1.15); }
+      36%, 100% { opacity: 0; transform: scale(0.6); }
+    }
+    @keyframes flameIgnite {
+      0%, 22% { opacity: 0; transform: scale(0.12, 0.06); }
+      27% { opacity: 1; transform: scale(0.4, 0.36); }
+      42% { transform: scale(1.12, 1.34); }
+      57% { transform: scale(0.93, 0.88); }
+      72% { transform: scale(1.04, 1.07); }
+      86% { transform: scale(0.99, 0.98); }
+      100% { opacity: 1; transform: scale(1, 1); }
+    }
+    @keyframes flameGlowIn {
+      0%, 25% { opacity: 0; transform: scale(0.4); }
+      45% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 0.8; transform: scale(1); }
+    }
+    @keyframes flameBurst {
+      0%, 25% { opacity: 0; transform: scale(0.3); }
+      36% { opacity: 1; transform: scale(1.3); }
+      70%, 100% { opacity: 0; transform: scale(2.2); }
+    }
+    @keyframes flameSpark {
+      0%, 26% { opacity: 0; transform: translate(0, 0) scale(1); }
+      30% { opacity: 1; }
+      70%, 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
     }
     #topStreak {
       min-width: 1ch;
@@ -402,29 +565,6 @@
       14% { transform: translateY(0); }
       82% { transform: translateY(0); }
       100% { transform: translateY(-110%); }
-    }
-    @keyframes streakFireLight {
-      0% {
-        filter: grayscale(1) saturate(0.3);
-        opacity: 0.48;
-        transform: scale(0.92);
-        text-shadow: none;
-      }
-      36% {
-        filter: grayscale(0) saturate(1.9);
-        opacity: 1;
-        transform: scale(1.24) rotate(-4deg);
-        text-shadow: 0 0 18px #f6b26b, 0 0 34px #ffdf75;
-      }
-      62% {
-        transform: scale(0.98) rotate(3deg);
-      }
-      100% {
-        filter: grayscale(0) saturate(1.4);
-        opacity: 1;
-        transform: scale(1);
-        text-shadow: 0 0 10px rgba(246, 178, 107, 0.75);
-      }
     }
     @keyframes streakCaretBlink {
       0%, 49% { opacity: 1; }
@@ -481,18 +621,19 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      transition: transform 220ms cubic-bezier(0.22, 0.8, 0.22, 1), background 180ms ease, color 180ms ease;
     }
     .nav-btn:hover:not(.active) {
       background: var(--surface);
       color: var(--text);
       transform: none;
     }
-    .nav-btn.active {
-      background: var(--nav-active);
-      color: var(--accent);
-    }
+    /* The selected tab sits slightly raised; hovering it does nothing extra. */
+    .nav-btn.active,
     .nav-btn.active:hover {
       background: var(--nav-active);
+      color: var(--accent);
+      transform: translateY(-2px);
     }
     .nav-btn kbd {
       display: none;
@@ -512,22 +653,6 @@
       font: 600 0.72em/1 var(--ui-font);
       vertical-align: middle;
     }
-    .key-hints {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 6px 18px;
-      color: var(--subtle);
-      font-size: 13px;
-      font-weight: 500;
-    }
-    .key-hints span {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .key-hints span[hidden],
     .result-help-backdrop[hidden] {
       display: none;
     }
@@ -590,12 +715,12 @@
       animation: screenExit 300ms cubic-bezier(0.22, 0.8, 0.22, 1) forwards;
     }
     @keyframes screenEnter {
-      from { opacity: 0; transform: translateX(var(--screen-slide)); }
+      from { opacity: 0; transform: translateX(calc(var(--screen-slide) * var(--slide-dir, 1))); }
       to { opacity: 1; transform: translateX(0); }
     }
     @keyframes screenExit {
       from { opacity: 1; transform: translateX(0); }
-      to { opacity: 0; transform: translateX(calc(var(--screen-slide) * -1)); }
+      to { opacity: 0; transform: translateX(calc(var(--screen-slide) * var(--slide-dir, 1) * -1)); }
     }
     @keyframes settingsOverlayEnter {
       from { opacity: 0; transform: none; }
@@ -641,7 +766,6 @@
     }
     .app,
     .panel,
-    .kpi,
     h1,
     h2,
     h3,
@@ -812,9 +936,19 @@
       transition: transform 130ms ease, background 130ms ease, border-color 130ms ease, color 130ms ease, box-shadow 130ms ease;
     }
     button:hover { background: var(--button-hover); transform: translateY(-1px); }
-    button:focus-visible {
-      outline: 3px solid var(--focus-ring);
+    /* One focus ring everywhere, shown for keyboard navigation only. */
+    :focus {
+      outline: none;
+    }
+    :focus-visible {
+      outline: 2px solid var(--focus-ring);
       outline-offset: 2px;
+    }
+    .stats-graph-dot:focus-visible,
+    .stats-graph-bar:focus-visible {
+      outline: none;
+      stroke: var(--text);
+      stroke-width: 3;
     }
     button.secondary {
       background: var(--surface);
@@ -871,18 +1005,6 @@
       padding: 0 30px;
       font-size: 17px;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-    }
-    .kpi {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--typing-bg);
-      padding: 12px;
-    }
-    .kpi .v { font-size: 26px; font-weight: 700; }
     ul { margin: 8px 0 0 18px; color: var(--muted); }
     .keyboard {
       display: flex;
@@ -913,25 +1035,6 @@
       min-width: 0;
       font-size: 14px;
       color: #d9e2f3;
-    }
-    .progress-wrap {
-      width: 100%;
-      height: 14px;
-      background: #f1f6ff;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .progress {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #2f71d8, #33b173);
-      transition: width 160ms ease;
-    }
-    .fade-in { animation: fade 220ms ease; }
-    @keyframes fade {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
     }
     .home-screen {
       display: flex;
@@ -1115,72 +1218,11 @@
     #statisticsScreen.insight-screen {
       padding-top: 0;
     }
-    .insight-shell {
-      width: min(1320px, 100%);
-      min-height: 100%;
-      margin: 0 auto;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: clamp(18px, 3vh, 34px);
-    }
-    .insight-hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-      gap: 24px;
-      padding-bottom: clamp(16px, 2.4vh, 30px);
-      border-bottom: 1px solid var(--border);
-    }
-    .insight-title {
-      margin: 0;
-      font-size: clamp(42px, 5vw, 76px);
-      line-height: 1;
-      font-weight: 700;
-      letter-spacing: 0;
-      color: var(--text);
-    }
-    .insight-subtitle {
-      max-width: 780px;
-      margin: 12px 0 0;
-      font-size: clamp(18px, 1.8vw, 28px);
-      line-height: 1.25;
-      color: var(--muted);
-    }
-    .insight-pill {
-      min-width: 176px;
-      padding: 13px 18px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: var(--typing-bg);
-      color: var(--text);
-      text-align: center;
-      font-size: clamp(18px, 1.7vw, 26px);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .insight-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.08fr) minmax(310px, 0.92fr);
-      gap: clamp(18px, 3vw, 34px);
-      align-items: stretch;
-      min-height: 0;
-    }
-    .insight-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--panel);
-      padding: clamp(18px, 2.6vw, 30px);
-      min-width: 0;
-    }
     .insight-card-title {
       margin: 0 0 18px;
       font-size: clamp(24px, 2.2vw, 34px);
       line-height: 1.08;
       font-weight: 700;
-    }
-    .focus-list {
-      display: grid;
-      gap: 14px;
     }
     .focus-dashboard-screen {
       padding: clamp(20px, 4vh, 44px) 0 clamp(20px, 3vh, 32px);
@@ -1445,95 +1487,6 @@
       font-size: clamp(20px, 2vw, 30px);
       line-height: 1.25;
     }
-    .mini-keyboard .key {
-      min-height: clamp(42px, 4.2vw, 60px);
-      border-width: 2px;
-      color: #ffffff;
-      opacity: 1;
-    }
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-    .stat-tile {
-      min-height: 128px;
-      display: grid;
-      align-content: center;
-      gap: 8px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--typing-bg);
-      padding: 18px;
-    }
-    .stat-label {
-      color: var(--muted);
-      font-size: clamp(15px, 1.25vw, 18px);
-      font-weight: 600;
-    }
-    .stat-value {
-      color: var(--text);
-      font-size: clamp(30px, 3.4vw, 52px);
-      line-height: 1;
-      font-weight: 700;
-    }
-    .stat-bars {
-      display: grid;
-      gap: 14px;
-    }
-    .stat-bar-row {
-      display: grid;
-      grid-template-columns: minmax(84px, auto) 1fr minmax(74px, auto);
-      align-items: center;
-      gap: 12px;
-      font-size: clamp(15px, 1.25vw, 18px);
-      color: var(--muted);
-    }
-    .stat-bar-track {
-      height: 14px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: var(--typing-bg);
-      overflow: hidden;
-    }
-    .stat-bar-fill {
-      width: var(--bar-value, 0%);
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #2f71d8, #33b173);
-    }
-    .session-list {
-      display: grid;
-      gap: 12px;
-    }
-    .session-row {
-      display: grid;
-      grid-template-columns: minmax(90px, auto) 1fr auto;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 0;
-      border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-    }
-    .session-row:last-child {
-      border-bottom: 0;
-    }
-    .session-type {
-      color: var(--muted);
-      font-size: 15px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .session-date {
-      color: var(--text);
-      font-size: clamp(17px, 1.45vw, 22px);
-      font-weight: 700;
-    }
-    .session-score {
-      color: var(--text);
-      font-size: clamp(18px, 1.65vw, 24px);
-      font-weight: 700;
-      white-space: nowrap;
-    }
     .stats-dashboard {
       width: min(1180px, 100%);
       height: 100%;
@@ -1665,7 +1618,7 @@
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
     .stats-view-tab:focus-visible {
-      outline: 3px solid var(--focus-ring);
+      outline: 2px solid var(--focus-ring);
       outline-offset: 2px;
     }
     .stats-tab-icon {
@@ -1758,15 +1711,6 @@
     .stats-graph-bar-bg {
       fill: color-mix(in srgb, var(--stats-graph-grid) 60%, transparent);
       rx: 10;
-    }
-    .stats-graph-day-column {
-      fill: color-mix(in srgb, var(--stats-graph-grid) 28%, transparent);
-      rx: 8;
-    }
-    .stats-graph-ghost-bar {
-      fill: color-mix(in srgb, var(--stats-graph-grid) 52%, transparent);
-      opacity: 0.34;
-      rx: 8;
     }
     .stats-graph-value {
       fill: var(--stats-graph-label);
@@ -2479,30 +2423,6 @@
       background: color-mix(in srgb, var(--bad) 86%, #000000);
       border-color: color-mix(in srgb, var(--bad) 86%, #000000);
     }
-    .btn-home {
-      background: #dfdcff;
-      border-color: #c6c1fb;
-    }
-    .btn-danger {
-      margin-top: 12px;
-      background: #ffe4e4;
-      border-color: #ef9b9b;
-      color: #6d1515;
-    }
-    .settings-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .settings-actions button {
-      width: 144px;
-      height: 42px;
-      padding: 10px 14px;
-    }
-    .settings-actions .btn-danger {
-      margin-top: 0;
-    }
     .screen.settings-screen {
       position: fixed;
       inset: 0;
@@ -2591,7 +2511,6 @@
       min-height: 0;
       overflow-y: auto;
       padding: 24px 28px 32px;
-      scrollbar-color: color-mix(in srgb, var(--text) 24%, transparent) transparent;
     }
     .settings-content h2 {
       margin: 0 0 20px;
@@ -2748,7 +2667,7 @@
     .keyboard-dropdown-option:focus-visible,
     .settings-toggle:focus-visible,
     .settings-close:focus-visible {
-      outline: 3px solid var(--focus-ring);
+      outline: 2px solid var(--focus-ring);
       outline-offset: 2px;
     }
     .settings-toggle {
@@ -3199,6 +3118,15 @@
         grid-template-rows: auto auto;
         padding: 4px 0 16px;
       }
+      .stats-kpi-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+      .stats-kpi-card {
+        grid-column: span 2;
+      }
+      .stats-kpi-card:nth-child(n + 4) {
+        grid-column: span 3;
+      }
       .stats-graph-card {
         height: auto;
         min-height: 420px;
@@ -3270,7 +3198,6 @@
     }
     @media (hover: none) and (pointer: coarse) {
       kbd,
-      .key-hints,
       #shortcutsRow,
       .kbd-hint {
         display: none !important;
@@ -3278,13 +3205,15 @@
     }
     @media (max-width: 560px) {
       .stats-kpi-grid {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .stats-kpi-card {
-        grid-column: span 2;
-      }
+      .stats-kpi-card,
       .stats-kpi-card:nth-child(n + 4) {
-        grid-column: span 3;
+        grid-column: auto;
+        padding: 12px 14px;
+      }
+      .stats-kpi-card:last-child {
+        grid-column: 1 / -1;
       }
     }
     @media (max-width: 520px) {
@@ -3320,6 +3249,10 @@
       }
     }
     @media (prefers-reduced-motion: reduce) {
+      .flame-svg *,
+      .flame-svg {
+        animation: none !important;
+      }
       .fullscreen-alert.visible {
         opacity: 1;
       }
@@ -3371,7 +3304,56 @@
       <div class="top-status" aria-label="Current time and streak">
         <span id="topTime" class="top-status-item">--:--</span>
         <span class="top-sep">|</span>
-        <span id="topStreakItem" class="top-status-item" title="Daily streak"><span id="topStreakIcon" class="top-streak-icon" aria-hidden="true">🔥</span><span id="topStreak">0</span></span>
+        <span id="topStreakItem" class="top-status-item" title="Daily streak"><span id="topStreakIcon" class="top-streak-icon" aria-hidden="true"><svg class="flame-svg" viewBox="0 0 24 30" focusable="false">
+            <defs>
+              <radialGradient id="flameGlowGrad">
+                <stop offset="0%" stop-color="#ff8c2a" stop-opacity="0.5"/>
+                <stop offset="100%" stop-color="#ff8c2a" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="flameOuterGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="#ff8a1e"/>
+                <stop offset="55%" stop-color="#ff6a1c"/>
+                <stop offset="100%" stop-color="#f2431f"/>
+              </linearGradient>
+              <radialGradient id="flameEmberGrad">
+                <stop offset="0%" stop-color="#fff4c9"/>
+                <stop offset="35%" stop-color="#ffb23e"/>
+                <stop offset="70%" stop-color="#ff6a1c" stop-opacity="0.55"/>
+                <stop offset="100%" stop-color="#ff6a1c" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="flameBaseGrad">
+                <stop offset="0%" stop-color="#4f86ff" stop-opacity="0.75"/>
+                <stop offset="100%" stop-color="#4f86ff" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="flameCoreGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="#fff6d6"/>
+                <stop offset="60%" stop-color="#ffe08a"/>
+                <stop offset="100%" stop-color="#ffb53a"/>
+              </linearGradient>
+            </defs>
+            <circle class="flame-glow" cx="12" cy="18" r="12" fill="url(#flameGlowGrad)"/>
+            <circle class="flame-burst" cx="12" cy="20" r="12" fill="url(#flameGlowGrad)"/>
+            <path class="flame-off" d="M12 2.2c.9 4 3.6 6.4 5.5 9.3 1.5 2.3 2.3 4.6 2.3 7 0 5.1-3.5 9.2-7.8 9.2s-7.8-4.1-7.8-9.2c0-3 1.3-5.5 3.1-7.5.3 2 1.3 3.4 2.7 4-.5-4.9.4-9.4 2-12.8z"/>
+            <circle class="flame-ember" cx="12" cy="24.5" r="3.4" fill="url(#flameEmberGrad)"/>
+            <g class="flame-lit">
+              <g class="flame-sway">
+                <g class="flame-body">
+                  <path class="flame-outer" d="M12 2.2c.9 4 3.6 6.4 5.5 9.3 1.5 2.3 2.3 4.6 2.3 7 0 5.1-3.5 9.2-7.8 9.2s-7.8-4.1-7.8-9.2c0-3 1.3-5.5 3.1-7.5.3 2 1.3 3.4 2.7 4-.5-4.9.4-9.4 2-12.8z" fill="url(#flameOuterGrad)"/>
+                  <g class="flame-core">
+                    <path d="M12.3 13.2c.6 2.4 2.1 3.8 3 5.4.6 1 .9 2 .9 3.1 0 2.6-1.8 4.6-4.1 4.6s-4.1-2-4.1-4.6c0-1.9 1-3.4 2.2-4.5.2 1.1.6 1.8 1.3 2.2 0-2.4.2-4.3.8-6.2z" fill="url(#flameCoreGrad)"/>
+                    <ellipse cx="12.1" cy="25.6" rx="2.8" ry="1.5" fill="url(#flameBaseGrad)"/>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g class="flame-sparks">
+              <circle class="flame-spark" style="--dx: -6px; --dy: -15px; --delay: 0ms" cx="11" cy="20" r="1.1"/>
+              <circle class="flame-spark" style="--dx: 5px; --dy: -19px; --delay: 60ms" cx="13" cy="19" r="0.9"/>
+              <circle class="flame-spark" style="--dx: -2px; --dy: -23px; --delay: 120ms" cx="12" cy="17" r="0.8"/>
+              <circle class="flame-spark" style="--dx: 8px; --dy: -11px; --delay: 30ms" cx="14" cy="21" r="0.7"/>
+            </g>
+          </svg></span>
+<span id="topStreak">0</span></span>
       </div>
     </header>
 
@@ -3562,7 +3544,7 @@
                     <span id="keyboardLayoutValue">QWERTY</span>
                     <span class="keyboard-dropdown-caret" aria-hidden="true"></span>
                   </button>
-                  <div id="keyboardLayoutMenu" class="keyboard-dropdown-menu" role="listbox" aria-label="Keyboard layout">
+                  <div id="keyboardLayoutMenu" class="keyboard-dropdown-menu" role="listbox" aria-label="Keyboard layout" inert>
                     <button type="button" class="keyboard-dropdown-option" role="option" data-layout="qwerty" aria-selected="true">QWERTY</button>
                     <button type="button" class="keyboard-dropdown-option" role="option" data-layout="dvorak" aria-selected="false">DVORAK</button>
                     <button type="button" class="keyboard-dropdown-option" role="option" data-layout="colemak" aria-selected="false">Colemak</button>
@@ -4507,9 +4489,49 @@
       refreshFullscreenAlert({ replay: true });
     }
 
+    // Focus management for overlays. While a layer is open, everything outside it is inert
+    // (unreachable by Tab or pointer), focus moves into it, and returns to its opener on close.
+    const layerStack = [];
+
+    function refreshLayerInert() {
+      document.querySelectorAll("[data-layer-inert]").forEach(el => {
+        el.inert = false;
+        el.removeAttribute("data-layer-inert");
+      });
+      const top = layerStack[layerStack.length - 1];
+      if (!top) return;
+      for (let node = top.el; node.parentElement && node !== document.body; node = node.parentElement) {
+        [...node.parentElement.children].forEach(sibling => {
+          if (sibling === node || sibling.inert || sibling.tagName === "SCRIPT" || sibling.tagName === "STYLE") return;
+          sibling.inert = true;
+          sibling.setAttribute("data-layer-inert", "");
+        });
+      }
+    }
+
+    function openLayer(el, focusTarget) {
+      if (!el || layerStack.some(layer => layer.el === el)) return;
+      const active = document.activeElement;
+      layerStack.push({ el, opener: active && active !== document.body ? active : null });
+      refreshLayerInert();
+      if (focusTarget) focusTarget.focus({ preventScroll: true });
+    }
+
+    function closeLayer(el, options = {}) {
+      const index = layerStack.findIndex(layer => layer.el === el);
+      if (index === -1) return;
+      const [layer] = layerStack.splice(index, 1);
+      refreshLayerInert();
+      const opener = layer.opener;
+      if (options.restoreFocus !== false && opener && opener.isConnected && !opener.closest("[inert], .hidden")) {
+        opener.focus({ preventScroll: true });
+      }
+    }
+
     function setKeyboardDropdownOpen(isOpen) {
       ui.keyboardLayoutDropdown.classList.toggle("open", isOpen);
       ui.keyboardLayoutButton.setAttribute("aria-expanded", String(isOpen));
+      ui.keyboardLayoutMenu.inert = !isOpen;
     }
 
     function toggleKeyboardDropdown() {
@@ -4524,6 +4546,7 @@
       ui.settingsScreen.querySelector(".settings-content").scrollTop = 0;
       settingsUnderlayScreenId = activeScreenId;
       showScreen("settingsScreen");
+      openLayer(ui.settingsScreen, ui.settingsHomeBtn);
       requestAnimationFrame(() => {
         ui.settingsScreen.querySelector(".settings-content").scrollTop = 0;
       });
@@ -4533,12 +4556,13 @@
       if (!ui.wipeConfirmBackdrop) return;
       if (open) {
         ui.wipeConfirmBackdrop.hidden = false;
+        openLayer(ui.wipeConfirmBackdrop, ui.wipeCancelBtn);
         requestAnimationFrame(() => {
           ui.wipeConfirmBackdrop.classList.add("visible");
-          ui.wipeCancelBtn.focus();
         });
         return;
       }
+      closeLayer(ui.wipeConfirmBackdrop);
       ui.wipeConfirmBackdrop.classList.remove("visible");
       window.setTimeout(() => {
         if (!ui.wipeConfirmBackdrop.classList.contains("visible")) ui.wipeConfirmBackdrop.hidden = true;
@@ -4559,24 +4583,24 @@
       if (!backdrop) return;
       if (open) {
         backdrop.hidden = false;
+        openLayer(backdrop, ui.shortcutsCloseBtn);
         requestAnimationFrame(() => {
           backdrop.classList.add("visible");
-          ui.shortcutsCloseBtn.focus();
         });
         return;
       }
-      const wasOpen = backdrop.classList.contains("visible");
+      closeLayer(backdrop, options);
       backdrop.classList.remove("visible");
       window.setTimeout(() => {
         if (!backdrop.classList.contains("visible")) backdrop.hidden = true;
       }, 190);
-      if (wasOpen && options.restoreFocus !== false) ui.shortcutsBtn.focus();
     }
 
     function closeSettings() {
       if (activeScreenId !== "settingsScreen") return;
       setWipeConfirmOpen(false);
       setShortcutsOpen(false, { restoreFocus: false });
+      closeLayer(ui.settingsScreen);
       const targetId = settingsUnderlayScreenId || (hasCompletedStartup() ? "homeScreen" : "welcomeScreen");
       const target = document.getElementById(targetId);
       if (!target) return;
@@ -4678,8 +4702,16 @@
       }
       const openingSettings = targetId === "settingsScreen" && current;
       const leavingSettings = activeScreenId === "settingsScreen";
+      if (leavingSettings) closeLayer(ui.settingsScreen, { restoreFocus: false });
       const transitionMs = 300;
       const token = ++transitionToken;
+      // Moving left across the nav tabs slides the other way.
+      const fromTab = NAV_TAB_SCREENS.indexOf(activeScreenId);
+      const toTab = NAV_TAB_SCREENS.indexOf(targetId);
+      const arrowDir = runtime.pendingSlideDir;
+      runtime.pendingSlideDir = 0;
+      const reverse = arrowDir ? arrowDir < 0 : fromTab !== -1 && toTab !== -1 && toTab < fromTab;
+      ui.app.style.setProperty("--slide-dir", reverse ? "-1" : "1");
       updateShellForScreen(targetId);
       if (transitionCleanupTimer) {
         clearTimeout(transitionCleanupTimer);
@@ -4824,6 +4856,8 @@
       state.streak.count = to;
       state.streak.best = Math.max(state.streak.best || 0, to);
       state.streak.lastAwardDate = today;
+      // Keep the flame unlit until the celebration plays the ignition.
+      ui.topStreakItem.classList.add("streak-pending");
       updateTopStatus();
       saveState();
       return { awarded: true, from, to };
@@ -4839,6 +4873,309 @@
       runtime.streakTypingTimers.push(timer);
     }
 
+    // Streak flame renderer: a small WebGL shader draws the flame so its outline can move like
+    // real fire (the SVG icon stays as the fallback). Flat colour bands keep the app's look.
+    const FLAME_VERTEX = "attribute vec2 a; varying vec2 v; void main() { v = a * 0.5 + 0.5; gl_Position = vec4(a, 0.0, 1.0); }";
+    const FLAME_FRAGMENT = `
+precision mediump float;
+varying vec2 v;
+uniform float uTime, uGrow, uTurb, uGreyA, uFlameA, uGlow, uSpark, uPx;
+uniform vec3 uGrey;
+uniform vec4 uFrame;   // icon box inside the canvas (uv): x, y, w, h
+uniform float uAspect; // icon box width / height
+
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) {
+  float s = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) { s += a * noise(p); p = p * 2.03 + 11.7; a *= 0.5; }
+  return s;
+}
+// Egg-shaped profile: round base below c, holds its width high, then closes into a short
+// rounded point at h (modelled on the Windows fire emoji). Positive inside.
+float egg(vec2 p, float c, float r, float h) {
+  if (p.y < c - r || p.y > h) return -1.0;
+  float w;
+  if (p.y < c) { float dy = p.y - c; w = sqrt(max(0.0, r * r - dy * dy)); }
+  else {
+    float k = clamp((p.y - c) / max(h - c, 0.001), 0.0, 1.0);
+    w = r * pow(max(0.0, 1.0 - pow(k, 1.5)), 0.85);
+  }
+  return w - abs(p.x);
+}
+float leanK(float y, float c, float h) { float k = clamp((y - c) / max(h - c, 0.001), 0.0, 1.0); return k * k; }
+// Turbulence rises through the flame; stronger toward the tip, pinned at the base.
+vec2 displace(vec2 q, float t, float turb) {
+  float h = clamp((q.y - 0.12) / 0.88, 0.0, 1.0);
+  float n1 = fbm(vec2(q.x * 3.2, q.y * 3.0 - t * 1.9));
+  float n2 = fbm(vec2(q.x * 6.0 + 5.3, q.y * 5.0 - t * 2.7));
+  float sway = (sin(t * 1.7) * 0.035 + sin(t * 2.9 + 1.3) * 0.022) * turb;
+  vec2 d = q;
+  d.x += ((n1 - 0.5) * 0.28 * pow(h, 1.5) + (n2 - 0.5) * 0.07 * h) * turb + sway * h * h;
+  d.y += (n2 - 0.5) * 0.05 * h * turb;
+  return d;
+}
+// Outer flame (body + upper-left tongue), orange rim inset, and the big rounded inner core.
+vec3 flameField(vec2 q, float t, float turb) {
+  vec2 d = displace(q, t, turb);
+  float n2 = fbm(vec2(q.x * 6.0 + 5.3, q.y * 5.0 - t * 2.7));
+  float n3 = fbm(vec2(q.x * 4.0 - 3.1, q.y * 4.0 - t * 2.2));
+  float tip = 0.9 + (n2 - 0.5) * 0.1 * turb;
+  float body = egg(vec2(d.x - 0.03 * leanK(d.y, 0.33, tip), d.y), 0.33, 0.31, tip);
+  float tongueTip = 0.76 + (n3 - 0.5) * 0.14 * turb;
+  float tongue = egg(vec2(d.x + 0.18 + 0.07 * leanK(d.y, 0.47, tongueTip), d.y), 0.47, 0.115, tongueTip);
+  float fo = max(body, tongue);
+  vec2 dc = mix(q, d, 0.5);
+  float coreTip = 0.68 + (n2 - 0.5) * 0.06 * turb;
+  float fc = egg(vec2(dc.x - 0.02, dc.y), 0.26, 0.19, coreTip);
+  return vec3(fo, fo - 0.05, fc);
+}
+vec4 over(vec4 dst, vec3 col, float a) { return vec4(col * a + dst.rgb * (1.0 - a), a + dst.a * (1.0 - a)); }
+
+void main() {
+  vec2 p = (v - uFrame.xy) / uFrame.zw;
+  vec2 q = vec2((p.x - 0.5) * uAspect, p.y);
+  vec4 o = vec4(0.0);
+  float aa = uPx * 1.1;
+
+  // Soft glow behind the flame, faded out before the canvas edges.
+  float edge = min(min(v.x, 1.0 - v.x), min(v.y, 1.0 - v.y));
+  float g = exp(-length((q - vec2(0.0, 0.4)) * vec2(1.15, 0.85)) * 3.4) * 0.42 * uGlow * smoothstep(0.0, 0.18, edge);
+  o = over(o, vec3(1.0, 0.55, 0.2), clamp(g, 0.0, 1.0));
+
+  // Unlit silhouette: the same flame frozen mid-flicker, in flat grey.
+  float fg = flameField(q, 0.4, 0.35).x;
+  o = over(o, uGrey, smoothstep(-aa, aa, fg) * uGreyA);
+
+  if (uFlameA > 0.0) {
+    // Growth scales the whole flame up from its base; width lags height for a whoosh.
+    float grow = max(uGrow, 0.001);
+    vec2 base = vec2(0.0, 0.02);
+    vec2 s = vec2(0.55 + 0.45 * min(grow, 1.0) + 0.1 * max(grow - 1.0, 0.0), grow);
+    vec2 qg = (q - base) / s + base;
+    vec3 f = flameField(qg, uTime, uTurb);
+    float fa = aa / s.x;
+
+    vec3 outer = mix(vec3(1.0, 0.44, 0.1), vec3(0.92, 0.22, 0.12), smoothstep(0.35, 0.95, qg.y));
+    vec3 mid = mix(vec3(1.0, 0.63, 0.14), vec3(1.0, 0.46, 0.1), smoothstep(0.35, 0.8, qg.y));
+    vec3 core = mix(vec3(1.0, 0.97, 0.86), vec3(1.0, 0.83, 0.4), smoothstep(0.15, 0.55, qg.y));
+    core = mix(core, vec3(0.5, 0.66, 1.0), (1.0 - smoothstep(0.05, 0.15, qg.y)) * 0.55);
+
+    float ao = smoothstep(-fa, fa, f.x), am = smoothstep(-fa, fa, f.y), ac = smoothstep(-fa, fa, f.z);
+    vec3 col = mix(mix(outer, mid, am), core, ac);
+    o = over(o, col, ao * uFlameA);
+  }
+
+  // Sparks thrown off by the ignition.
+  if (uSpark > 0.0 && uSpark < 1.0) {
+    for (int i = 0; i < 6; i++) {
+      float fi = float(i);
+      vec2 vel = vec2((hash(vec2(fi, 1.0)) - 0.5) * 1.1, 1.0 + hash(vec2(fi, 2.0)) * 0.9);
+      float s = uSpark * (0.75 + hash(vec2(fi, 3.0)) * 0.35);
+      vec2 pos = vec2((hash(vec2(fi, 4.0)) - 0.5) * 0.2, 0.36) + vel * s - vec2(0.0, 0.55 * s * s);
+      float size = 0.028 * (1.0 - uSpark) + uPx * 0.6;
+      float a = smoothstep(size, size * 0.35, length(q - pos)) * (1.0 - uSpark);
+      o = over(o, vec3(1.0, 0.8, 0.35), a);
+    }
+  }
+  gl_FragColor = o;
+}`;
+
+    // The canvas extends past the icon box so the glow and sparks have room; layout is unaffected.
+    const FLAME_PAD = { left: 0.45, right: 0.45, top: 0.75, bottom: 0.15 };
+    const FLAME_IGNITE_DELAY = 0.3; // seconds of unlit pause while the top bar drops in
+    const FLAME_IGNITE_LENGTH = 1.2;
+
+    function flameParams(mode, elapsed, time) {
+      if (mode === "unlit") return { grow: 0, turb: 0, greyA: 0.75, flameA: 0, glow: 0, spark: 0, time };
+      if (mode === "lit" || elapsed === null) {
+        return { grow: 1, turb: 1, greyA: 0, flameA: 1, glow: 0.9 + 0.08 * Math.sin(time * 2.3) + 0.05 * Math.sin(time * 5.1), spark: 0, time };
+      }
+      // After the pause the flame comes straight to life: it grows from the base with an
+      // overshoot while the grey icon fades out underneath it.
+      const t = elapsed - FLAME_IGNITE_DELAY;
+      if (t < 0) return flameParams("unlit", null, time);
+      return {
+        grow: 1 - Math.exp(-5 * t) * Math.cos(10 * t),
+        turb: 1 + 1.4 * Math.exp(-3 * t),
+        greyA: 0.75 * Math.max(0, 1 - t / 0.18),
+        flameA: Math.min(1, t / 0.05),
+        glow: Math.min(1, t / 0.08) * (1 + 1.3 * Math.exp(-4 * t)),
+        spark: Math.min(1, Math.max(0, (t - 0.03) / 0.9)),
+        time
+      };
+    }
+
+    function parseHexColor(value) {
+      const hex = String(value || "").trim().replace("#", "");
+      if (/^[0-9a-f]{6}$/i.test(hex)) return [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+      return [0.5, 0.5, 0.55];
+    }
+
+    function createStreakFlame(host) {
+      const canvas = document.createElement("canvas");
+      canvas.setAttribute("aria-hidden", "true");
+      const gl = canvas.getContext("webgl", { premultipliedAlpha: true, antialias: false, alpha: true });
+      if (!gl) return null;
+      const compile = (type, source) => {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+      };
+      const vertex = compile(gl.VERTEX_SHADER, FLAME_VERTEX);
+      const fragment = compile(gl.FRAGMENT_SHADER, FLAME_FRAGMENT);
+      if (!vertex || !fragment) return null;
+      const program = gl.createProgram();
+      gl.attachShader(program, vertex);
+      gl.attachShader(program, fragment);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null;
+      gl.useProgram(program);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const position = gl.getAttribLocation(program, "a");
+      gl.enableVertexAttribArray(position);
+      gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+      const uniforms = {};
+      ["uTime", "uGrow", "uTurb", "uGreyA", "uFlameA", "uGlow", "uSpark", "uPx", "uGrey", "uFrame", "uAspect"].forEach(name => {
+        uniforms[name] = gl.getUniformLocation(program, name);
+      });
+
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const start = performance.now();
+      let mode = "unlit";
+      let igniteAt = 0;
+      let raf = 0;
+      let box = { w: 1, h: 1 };
+      let lost = false;
+      let onScreen = true;
+
+      const layout = () => {
+        const rect = host.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        box = { w: rect.width, h: rect.height };
+        const cssW = box.w * (1 + FLAME_PAD.left + FLAME_PAD.right);
+        const cssH = box.h * (1 + FLAME_PAD.top + FLAME_PAD.bottom);
+        Object.assign(canvas.style, {
+          left: `${-box.w * FLAME_PAD.left}px`,
+          top: `${-box.h * FLAME_PAD.top}px`,
+          width: `${cssW}px`,
+          height: `${cssH}px`
+        });
+        const dpr = Math.min(window.devicePixelRatio || 1, 3);
+        canvas.width = Math.max(1, Math.round(cssW * dpr));
+        canvas.height = Math.max(1, Math.round(cssH * dpr));
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      };
+
+      const draw = params => {
+        const totalW = 1 + FLAME_PAD.left + FLAME_PAD.right;
+        const totalH = 1 + FLAME_PAD.top + FLAME_PAD.bottom;
+        const grey = parseHexColor(getComputedStyle(host).getPropertyValue("--subtle"));
+        gl.uniform4f(uniforms.uFrame, FLAME_PAD.left / totalW, FLAME_PAD.bottom / totalH, 1 / totalW, 1 / totalH);
+        gl.uniform1f(uniforms.uAspect, box.w / box.h);
+        gl.uniform1f(uniforms.uPx, totalH / canvas.height);
+        gl.uniform3f(uniforms.uGrey, grey[0], grey[1], grey[2]);
+        gl.uniform1f(uniforms.uTime, params.time);
+        gl.uniform1f(uniforms.uGrow, params.grow);
+        gl.uniform1f(uniforms.uTurb, params.turb);
+        gl.uniform1f(uniforms.uGreyA, params.greyA);
+        gl.uniform1f(uniforms.uFlameA, params.flameA);
+        gl.uniform1f(uniforms.uGlow, params.glow);
+        gl.uniform1f(uniforms.uSpark, params.spark);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      };
+
+      const frame = () => {
+        raf = 0;
+        // Nothing to draw while the top bar is hidden or slid off-screen (blocks, Results);
+        // the observers restart the loop when it comes back.
+        if (lost || !onScreen || !host.getClientRects().length) return;
+        const still = reducedMotion.matches;
+        let elapsed = null;
+        if (mode === "igniting") {
+          elapsed = (performance.now() - igniteAt) / 1000;
+          if (still || elapsed > FLAME_IGNITE_DELAY + FLAME_IGNITE_LENGTH) {
+            mode = "lit";
+            elapsed = null;
+          }
+        }
+        // Reduced motion shows a still lit flame; otherwise the loop runs only while visible.
+        const time = still ? 1.0 : (performance.now() - start) / 1000;
+        draw(flameParams(mode, elapsed, time));
+        if (!still && mode !== "unlit" && !document.hidden) raf = requestAnimationFrame(frame);
+      };
+      const kick = () => {
+        if (!raf && !lost) raf = requestAnimationFrame(frame);
+      };
+
+      canvas.addEventListener("webglcontextlost", event => {
+        event.preventDefault();
+        lost = true;
+        host.classList.remove("flame-webgl");
+      });
+      host.appendChild(canvas);
+      host.classList.add("flame-webgl");
+      layout();
+      if ("ResizeObserver" in window) new ResizeObserver(() => { layout(); kick(); }).observe(host);
+      if ("IntersectionObserver" in window) {
+        new IntersectionObserver(entries => {
+          onScreen = entries[entries.length - 1].isIntersecting;
+          kick();
+        }).observe(canvas);
+      }
+      document.addEventListener("visibilitychange", kick);
+      if (reducedMotion.addEventListener) reducedMotion.addEventListener("change", kick);
+      // Theme changes recolour the grey unlit flame.
+      new MutationObserver(kick).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+      kick();
+
+      return {
+        get mode() {
+          return mode;
+        },
+        setMode(next) {
+          if (next === "igniting") igniteAt = performance.now();
+          mode = next;
+          kick();
+        }
+      };
+    }
+
+    // Drive the flame from the classes the streak code already sets on the top-bar item.
+    function attachStreakFlame() {
+      if (!ui.topStreakIcon || !ui.topStreakItem) return;
+      let flame = null;
+      try {
+        flame = createStreakFlame(ui.topStreakIcon);
+      } catch (error) {
+        flame = null;
+      }
+      if (!flame) return;
+      const item = ui.topStreakItem;
+      const sync = () => {
+        const lighting = item.classList.contains("streak-lighting");
+        const lit = item.classList.contains("streak-lit") && !item.classList.contains("streak-pending");
+        if (lighting) {
+          if (flame.mode !== "igniting") flame.setMode("igniting");
+        } else if (lit) {
+          // Let an ignition in progress finish on its own before settling into the loop.
+          if (flame.mode === "unlit") flame.setMode("lit");
+        } else if (flame.mode !== "unlit") {
+          flame.setMode("unlit");
+        }
+      };
+      new MutationObserver(sync).observe(item, { attributes: true, attributeFilter: ["class"] });
+      sync();
+    }
+
     function playStreakCelebration(from, to) {
       clearTimeout(runtime.streakCelebrationTimer);
       clearStreakTypingTimers();
@@ -4848,6 +5185,7 @@
       ui.topStreak.textContent = String(from);
       void ui.app.offsetWidth;
       ui.app.classList.add("streak-celebrating");
+      ui.topStreakItem.classList.remove("streak-pending");
       ui.topStreakItem.classList.add("streak-lighting");
       ui.topStreak.classList.add("streak-typing");
       queueStreakStep(() => {
@@ -4978,7 +5316,7 @@
       runtime.streakCelebrationTimer = null;
       clearStreakTypingTimers();
       ui.app.classList.remove("streak-celebrating");
-      ui.topStreakItem.classList.remove("streak-lighting", "streak-lit");
+      ui.topStreakItem.classList.remove("streak-lighting", "streak-lit", "streak-pending");
       ui.topStreak.classList.remove("streak-typing");
       resetDiagnostic();
       setResultsExpanded(false, { immediate: true });
@@ -5002,7 +5340,7 @@
       runtime.streakCelebrationTimer = null;
       clearStreakTypingTimers();
       ui.app.classList.remove("streak-celebrating");
-      ui.topStreakItem.classList.remove("streak-lighting", "streak-lit");
+      ui.topStreakItem.classList.remove("streak-lighting", "streak-lit", "streak-pending");
       ui.topStreak.classList.remove("streak-typing");
       updateTopStatus();
       renderStatisticsPage();
@@ -5518,11 +5856,19 @@
       return calculateResultScoreParts(results).total;
     }
 
+    // If Tab moved focus onto a button mid-block, typing hands focus back to the text
+    // so a later Enter or Space can't trigger that button by accident.
+    function releaseStrayFocus() {
+      const active = document.activeElement;
+      if (active && active !== document.body && typeof active.blur === "function") active.blur();
+    }
+
     function handleDiagnosticKeydown(e) {
       if (state.phase !== "diagnostic" || runtime.diagDone) return;
       if (e.key === "Tab" || e.key === "Alt" || e.key === "Shift" || e.key === "Control" || e.key === "Meta") return;
       if (e.key === "Backspace") return;
       if (e.key.length !== 1) return;
+      releaseStrayFocus();
       e.preventDefault();
 
       const expected = state.diagnosticText[runtime.diagIndex];
@@ -5850,12 +6196,14 @@
       if (!ui.resultHelpBackdrop) return;
       if (open) {
         ui.resultHelpBackdrop.hidden = false;
+        openLayer(ui.resultHelpBackdrop, ui.resultHelpBackdrop.querySelector(".dialog-close"));
         requestAnimationFrame(() => {
           ui.resultsPhase.classList.add("help-open");
           ui.resultHelpBackdrop.classList.add("visible");
         });
         return;
       }
+      closeLayer(ui.resultHelpBackdrop);
       ui.resultsPhase.classList.remove("help-open");
       ui.resultHelpBackdrop.classList.remove("visible");
       window.setTimeout(() => {
@@ -5869,12 +6217,14 @@
       if (!ui.focusHelpBackdrop) return;
       if (open) {
         ui.focusHelpBackdrop.hidden = false;
+        openLayer(ui.focusHelpBackdrop, ui.focusHelpBackdrop.querySelector(".dialog-close"));
         requestAnimationFrame(() => {
           ui.focusPointsScreen.classList.add("help-open");
           ui.focusHelpBackdrop.classList.add("visible");
         });
         return;
       }
+      closeLayer(ui.focusHelpBackdrop);
       ui.focusPointsScreen.classList.remove("help-open");
       ui.focusHelpBackdrop.classList.remove("visible");
       window.setTimeout(() => {
@@ -5912,7 +6262,8 @@
           el.style.setProperty("--reveal-index", String(revealIndex));
           if (!isResultsKeyboard) el.classList.add("replayed");
           if (flipKeys) {
-            el.tabIndex = 0;
+            // Hover reveals per-key timing; the same data is in the ranked lists, so keys stay out of the Tab order.
+            el.setAttribute("aria-label", `${ch.toUpperCase()}: ${hasMs ? `${Math.round(ms)} ms` : "not typed"}`);
             el.innerHTML = `
               <span class="key-flip-inner">
                 <span class="key-face front">${escapeHtml(ch.toUpperCase())}</span>
@@ -5959,15 +6310,8 @@
       mixed: "A balanced warm-up while Typing Trainer learns your patterns"
     };
 
-    function estimatedBlockMinutes() {
-      const chars = targetDrillCharacterCount();
-      const wpm = Math.max(10, recentBlockAverageWpm(5));
-      return Math.max(1, Math.round(chars / 5 / wpm));
-    }
-
     function blockMetaText(block) {
-      const description = BLOCK_TYPE_DESCRIPTIONS[block.type] || BLOCK_TYPE_DESCRIPTIONS.mixed;
-      return `${description} · about ${estimatedBlockMinutes()} min`;
+      return BLOCK_TYPE_DESCRIPTIONS[block.type] || BLOCK_TYPE_DESCRIPTIONS.mixed;
     }
 
     function renderHomeSummary() {
@@ -6027,12 +6371,6 @@
 
     function formatMs(ms) {
       return `${Math.round(ms || 0)} ms`;
-    }
-
-    function shortDate(isoDate) {
-      const date = new Date(isoDate);
-      if (Number.isNaN(date.getTime())) return "Recent";
-      return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
     }
 
     function emptyInsight(text) {
@@ -6176,11 +6514,29 @@
       return `${rounded}${suffix}`;
     }
 
+    // Graph text sits in fixed bands so it never collides with ticks, bars, or the axis.
+    const STATS_AXIS_TITLE_Y = 14;
+    const STATS_X_LABEL_INSET = 12;
+    const STATS_LABEL_CHAR_PX = 7.6;
+
+    function statsTickSteps(plotH) {
+      const count = Math.max(2, Math.min(5, Math.floor(plotH / 24) + 1));
+      return Array.from({ length: count }, (_, index) => index / (count - 1));
+    }
+
+    // Show every nth x label so neighbours never overlap; the newest (rightmost) one always shows.
+    function xLabelVisibility(labels, slotWidth) {
+      const widest = Math.max(1, ...labels.map(label => String(label).length)) * STATS_LABEL_CHAR_PX;
+      const every = Math.max(1, Math.ceil((widest + 10) / Math.max(1, slotWidth)));
+      const last = labels.length - 1;
+      return index => ((last - index) % every === 0 ? "" : ` visibility="hidden"`);
+    }
+
     function statsGridLines({ width, height, pad, leftMin = 0, leftMax, rightMin = 90, rightMax = 100, rightSuffix = "%", leftPrecision = 0, rightPrecision = 1 }) {
       const plotH = height - pad.top - pad.bottom;
       const leftSpan = Math.max(1, leftMax - leftMin);
       const rightSpan = Math.max(1, rightMax - rightMin);
-      return [0, 0.25, 0.5, 0.75, 1].map(step => {
+      return statsTickSteps(plotH).map(step => {
         const y = pad.top + plotH - plotH * step;
         const left = leftMin + leftSpan * step;
         const right = rightMin + rightSpan * step;
@@ -6232,21 +6588,6 @@
       return { min, max };
     }
 
-    function statsDailyGridLines({ width, height, pad, maxCount, wpmMin, wpmMax }) {
-      const plotH = height - pad.top - pad.bottom;
-      const wpmSpan = Math.max(1, wpmMax - wpmMin);
-      return [0, 0.25, 0.5, 0.75, 1].map(step => {
-        const y = pad.top + plotH - plotH * step;
-        const left = Math.round(maxCount * step);
-        const right = Math.round(wpmMin + wpmSpan * step);
-        return `
-          <line class="stats-graph-grid" x1="${pad.left}" y1="${y}" x2="${width - pad.right}" y2="${y}"></line>
-          <text class="stats-graph-label" x="${pad.left - 14}" y="${y + 5}" text-anchor="end">${left}</text>
-          <text class="stats-graph-label" x="${width - pad.right + 14}" y="${y + 5}" text-anchor="start">${right}</text>
-        `;
-      }).join("");
-    }
-
     function adaptiveWpmScale(values) {
       const valid = values.map(Number).filter(value => Number.isFinite(value) && value > 0);
       if (!valid.length) return { min: 50, max: 70 };
@@ -6262,7 +6603,7 @@
     function statsActivityGridLines({ width, height, pad, wpmMin, wpmMax }) {
       const plotH = height - pad.top - pad.bottom;
       const wpmSpan = Math.max(1, wpmMax - wpmMin);
-      return [0, 0.25, 0.5, 0.75, 1].map(step => {
+      return statsTickSteps(plotH).map(step => {
         const y = pad.top + plotH - plotH * step;
         const right = Math.round(wpmMin + wpmSpan * step);
         return `
@@ -6281,6 +6622,7 @@
       const wpmScale = adaptiveRecentScale(recent.map(session => Number(session.wpm || 0)), { tick: 5, minSpan: 10, floor: 0 });
       const accuracyScale = adaptiveRecentScale(recent.map(session => Number(session.accuracy || 0)), { tick: 1, minSpan: 2, floor: 0, ceiling: 100 });
       const xFor = index => pad.left + (plotW * index) / (count - 1);
+      const labelHidden = xLabelVisibility(recent.map((session, index) => `#${recentStartIndex + index + 1}`), plotW / (count - 1));
       const yForWpm = value => {
         const span = Math.max(1, wpmScale.max - wpmScale.min);
         const normalized = (clampNumber(value, wpmScale.min, wpmScale.max) - wpmScale.min) / span;
@@ -6294,7 +6636,7 @@
       const wpmPoints = recent.map((session, index) => `${xFor(index).toFixed(1)},${yForWpm(Number(session.wpm || 0)).toFixed(1)}`).join(" ");
       const accuracyPoints = recent.map((session, index) => `${xFor(index).toFixed(1)},${yForAccuracy(Number(session.accuracy || 0)).toFixed(1)}`).join(" ");
       const xLabels = recent.map((session, index) => {
-        return `<text class="stats-graph-label" x="${xFor(index)}" y="${height - 28}" text-anchor="middle">#${recentStartIndex + index + 1}</text>`;
+        return `<text class="stats-graph-label" x="${xFor(index)}" y="${height - STATS_X_LABEL_INSET}" text-anchor="middle"${labelHidden(index)}>#${recentStartIndex + index + 1}</text>`;
       }).join("");
       const dots = recent.map((session, index) => {
         const x = xFor(index);
@@ -6315,8 +6657,8 @@
         <line class="stats-graph-axis" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}"></line>
         <line class="stats-graph-axis" x1="${width - pad.right}" y1="${pad.top}" x2="${width - pad.right}" y2="${height - pad.bottom}"></line>
         <line class="stats-graph-axis" x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}"></line>
-        <text class="stats-graph-label" x="${pad.left}" y="24" text-anchor="start">WPM</text>
-        <text class="stats-graph-label" x="${width - pad.right}" y="24" text-anchor="end">Accuracy</text>
+        <text class="stats-graph-label" x="${pad.left}" y="${STATS_AXIS_TITLE_Y}" text-anchor="start">WPM</text>
+        <text class="stats-graph-label" x="${width - pad.right}" y="${STATS_AXIS_TITLE_Y}" text-anchor="end">Accuracy</text>
         ${xLabels}
         ${recent.length ? `<polyline class="stats-graph-line" style="--line-color: var(--chart-1)" points="${wpmPoints}"></polyline>` : ""}
         ${recent.length ? `<polyline class="stats-graph-line" style="--line-color: var(--chart-2)" points="${accuracyPoints}"></polyline>` : ""}
@@ -6351,78 +6693,6 @@
       return buckets;
     }
 
-    function renderDailyActivityGraph(sessions, width, height, pad) {
-      const dailyPad = { ...pad, top: 48, bottom: 54 };
-      const buckets = fillBuckets(dateBuckets(14), sessions, localDateKey);
-      const plotW = width - dailyPad.left - dailyPad.right;
-      const plotH = height - dailyPad.top - dailyPad.bottom;
-      const busiestDay = Math.max(0, ...buckets.map(bucket => bucket.sessions.length));
-      const maxCount = Math.max(4, Math.ceil(busiestDay / 4) * 4);
-      const avgEntries = buckets
-        .map((bucket, index) => ({
-          bucket,
-          index,
-          count: bucket.sessions.length,
-          avgWpm: average(bucket.sessions, item => Number(item.wpm || 0))
-        }))
-        .filter(entry => entry.count);
-      const wpmScale = adaptiveWpmScale(avgEntries.map(entry => entry.avgWpm));
-      const barGap = 10;
-      const barW = Math.max(18, (plotW - barGap * (buckets.length - 1)) / buckets.length);
-      const xFor = index => dailyPad.left + index * (barW + barGap);
-      const yForCount = value => dailyPad.top + plotH - (value / maxCount) * plotH;
-      const yForWpm = value => {
-        const span = Math.max(1, wpmScale.max - wpmScale.min);
-        const normalized = (Math.max(wpmScale.min, Math.min(wpmScale.max, value)) - wpmScale.min) / span;
-        return dailyPad.top + plotH - normalized * plotH;
-      };
-      const linePoints = avgEntries
-        .map(entry => `${(xFor(entry.index) + barW / 2).toFixed(1)},${yForWpm(entry.avgWpm).toFixed(1)}`)
-        .join(" ");
-      const dayColumns = buckets.map((bucket, index) => {
-        const x = xFor(index);
-        const center = x + barW / 2;
-        const count = bucket.sessions.length;
-        const avgWpm = average(bucket.sessions, item => Number(item.wpm || 0));
-        const dayLabel = escapeHtml(bucket.label);
-        if (!count) {
-          const ghostW = Math.max(4, barW * 0.16);
-          return `
-            <rect class="stats-graph-day-column" x="${center - 1}" y="${dailyPad.top}" width="2" height="${plotH}"></rect>
-            <rect class="stats-graph-ghost-bar" x="${center - ghostW / 2}" y="${height - dailyPad.bottom - 8}" width="${ghostW}" height="8"></rect>
-            <text class="stats-graph-label" x="${center}" y="${height - 28}" text-anchor="middle">${dayLabel}</text>
-          `;
-        }
-        const y = yForCount(count);
-        const h = height - dailyPad.bottom - y;
-        const labelY = h > 34 ? y + 24 : Math.max(dailyPad.top + 20, y - 8);
-        const blockLabel = `${count} Block${count === 1 ? "" : "s"}`;
-        return `
-          <rect class="stats-graph-day-column" x="${center - 1}" y="${dailyPad.top}" width="2" height="${plotH}"></rect>
-          <rect class="stats-graph-bar" style="--line-color: var(--chart-2)" x="${x}" y="${y}" width="${barW}" height="${h}" tabindex="0" data-stats-tooltip="${blockLabel}"></rect>
-          <text class="stats-graph-value" x="${center}" y="${labelY}" text-anchor="middle">${count}</text>
-          <text class="stats-graph-label" x="${center}" y="${height - 28}" text-anchor="middle">${dayLabel}</text>
-        `;
-      }).join("");
-      updateStatsGraphHeader([
-        { label: "Sessions", color: "var(--chart-2)" },
-        { label: "Avg WPM trend", color: "var(--chart-1)" }
-      ]);
-      return `
-        <desc id="statsGraphDesc">A daily activity chart with session bars and an adaptive average WPM trend line.</desc>
-        ${statsDailyGridLines({ width, height, pad: dailyPad, maxCount, wpmMin: wpmScale.min, wpmMax: wpmScale.max })}
-        <line class="stats-graph-axis" x1="${dailyPad.left}" y1="${dailyPad.top}" x2="${dailyPad.left}" y2="${height - dailyPad.bottom}"></line>
-        <line class="stats-graph-axis" x1="${width - dailyPad.right}" y1="${dailyPad.top}" x2="${width - dailyPad.right}" y2="${height - dailyPad.bottom}"></line>
-        <line class="stats-graph-axis" x1="${dailyPad.left}" y1="${height - dailyPad.bottom}" x2="${width - dailyPad.right}" y2="${height - dailyPad.bottom}"></line>
-        <text class="stats-graph-label" x="${dailyPad.left}" y="24" text-anchor="start">Sessions</text>
-        <text class="stats-graph-label" x="${width - dailyPad.right}" y="24" text-anchor="end">Avg WPM</text>
-        ${dayColumns}
-        ${avgEntries.length > 1 ? `<polyline class="stats-graph-line glow" style="--line-color: var(--chart-1)" points="${linePoints}"></polyline>` : ""}
-        ${avgEntries.length === 1 ? `<line class="stats-graph-line glow" style="--line-color: var(--chart-1)" x1="${xFor(avgEntries[0].index) + barW * 0.18}" y1="${yForWpm(avgEntries[0].avgWpm)}" x2="${xFor(avgEntries[0].index) + barW * 0.82}" y2="${yForWpm(avgEntries[0].avgWpm)}"></line>` : ""}
-        ${avgEntries.map(entry => `<circle class="stats-graph-dot" style="--line-color: var(--chart-1)" cx="${xFor(entry.index) + barW / 2}" cy="${yForWpm(entry.avgWpm)}" r="7" tabindex="0" data-stats-tooltip="${entry.avgWpm.toFixed(1)} Avg WPM"></circle>`).join("")}
-      `;
-    }
-
     function renderActivityGraph(sessions, width, height, pad, mode) {
       const daily = mode === "daily";
       const activityPad = daily
@@ -6441,9 +6711,12 @@
         .filter(bucket => bucket.sessions.length)
         .map(bucket => average(bucket.sessions, item => Number(item.wpm || 0)));
       const wpmScale = adaptiveWpmScale(avgWpmValues);
-      const barGap = daily ? 14 : Math.max(38, plotW * 0.055);
-      const barW = Math.max(16, (plotW - barGap * (buckets.length - 1)) / buckets.length);
+      // Size bars from the space available so they always fit, however narrow the chart is.
+      const slot = plotW / buckets.length;
+      const barGap = Math.min(daily ? 14 : Math.max(38, plotW * 0.055), slot * 0.35);
+      const barW = (plotW - barGap * (buckets.length - 1)) / buckets.length;
       const xFor = index => activityPad.left + index * (barW + barGap);
+      const labelHidden = xLabelVisibility(buckets.map(bucket => bucket.label), barW + barGap);
       const yForCount = value => activityPad.top + plotH - (value / maxCount) * plotH;
       const yForWpm = value => {
         const span = Math.max(1, wpmScale.max - wpmScale.min);
@@ -6469,7 +6742,7 @@
           <rect class="stats-graph-bar-bg" x="${x}" y="${activityPad.top}" width="${barW}" height="${plotH}" rx="${ghostRadius}"></rect>
           <rect class="stats-graph-bar" style="--line-color: var(--chart-2)" x="${x}" y="${y}" width="${barW}" height="${h}"${barTooltipAttrs}></rect>
           ${count ? `<text class="stats-graph-value" x="${x + barW / 2}" y="${valueY}" text-anchor="middle">${count}</text>` : ""}
-          <text class="stats-graph-label" x="${x + barW / 2}" y="${height - 28}" text-anchor="middle">${escapeHtml(bucket.label)}</text>
+          <text class="stats-graph-label" x="${x + barW / 2}" y="${height - STATS_X_LABEL_INSET}" text-anchor="middle"${labelHidden(index)}>${escapeHtml(bucket.label)}</text>
         `;
       }).join("");
       const dots = buckets.map((bucket, index) => {
@@ -6486,41 +6759,10 @@
         <line class="stats-graph-axis" x1="${activityPad.left}" y1="${activityPad.top}" x2="${activityPad.left}" y2="${height - activityPad.bottom}"></line>
         <line class="stats-graph-axis" x1="${width - activityPad.right}" y1="${activityPad.top}" x2="${width - activityPad.right}" y2="${height - activityPad.bottom}"></line>
         <line class="stats-graph-axis" x1="${activityPad.left}" y1="${height - activityPad.bottom}" x2="${width - activityPad.right}" y2="${height - activityPad.bottom}"></line>
-        <text class="stats-graph-label" x="${width - activityPad.right}" y="24" text-anchor="end">Avg WPM</text>
+        <text class="stats-graph-label" x="${width - activityPad.right}" y="${STATS_AXIS_TITLE_Y}" text-anchor="end">Avg WPM</text>
         ${bars}
         ${avgPointEntries.length > 1 ? `<polyline class="stats-graph-line" style="--line-color: var(--chart-1)" points="${avgPoints}"></polyline>` : ""}
         ${dots}
-      `;
-    }
-
-    function renderTopSpeedsGraph(sessions, width, height, pad) {
-      const top = sessions.slice().sort((a, b) => Number(b.wpm || 0) - Number(a.wpm || 0)).slice(0, 10);
-      const plotW = width - pad.left - pad.right;
-      const rowH = 38;
-      const rowGap = 12;
-      const maxWpm = Math.max(1, ...top.map(session => Number(session.wpm || 0)));
-      updateStatsGraphHeader([
-        { label: "WPM", color: "var(--chart-1)" },
-        { label: "Accuracy", color: "var(--chart-2)" }
-      ]);
-      const rows = top.map((session, index) => {
-        const y = pad.top + index * (rowH + rowGap);
-        const wpm = Number(session.wpm || 0);
-        const accuracy = Number(session.accuracy || 0);
-        const barW = (wpm / maxWpm) * plotW;
-        const label = `${Math.round(wpm)} WPM | ${Math.round(accuracy)}% | ${shortDate(session.date)}`;
-        return `
-          <text class="stats-graph-label" x="${pad.left - 18}" y="${y + 25}" text-anchor="end">#${index + 1}</text>
-          <rect class="stats-graph-bar-bg" x="${pad.left}" y="${y}" width="${plotW}" height="${rowH}"></rect>
-          <rect class="stats-graph-bar" style="--line-color: var(--chart-1)" x="${pad.left}" y="${y}" width="${barW}" height="${rowH}"><title>${escapeHtml(label)}</title></rect>
-          <text class="stats-graph-value" x="${pad.left + 18}" y="${y + 25}">${escapeHtml(label)}</text>
-        `;
-      }).join("");
-      return `
-        <title id="statsGraphTitle">Top typing speeds</title>
-        <desc id="statsGraphDesc">A horizontal bar chart of the fastest completed typing sessions.</desc>
-        ${rows}
-        <text class="stats-graph-label" x="${pad.left}" y="${height - 28}" text-anchor="start">Ranked by WPM</text>
       `;
     }
 
@@ -6539,8 +6781,8 @@
       return {
         left: Math.round(clampNumber(width * 0.055, 52, 82)),
         right: Math.round(clampNumber(width * 0.06, 58, 86)),
-        top: Math.round(clampNumber(height * 0.12, 30, 42)),
-        bottom: Math.round(clampNumber(height * 0.18, 34, 66))
+        top: 42,
+        bottom: 38
       };
     }
 
@@ -6725,10 +6967,6 @@
       return Math.max(36, Math.floor(availableWidth / charWidth));
     }
 
-    function targetDrillCharacterCount() {
-      return Math.round(targetDrillLineCount() * estimatedDrillLineCapacity());
-    }
-
     function sentenceTargetScore(entry, plans) {
       return plans.reduce((score, plan) => {
         const hits = countOccurrences(entry.lower, targetValue(plan.target));
@@ -6859,6 +7097,7 @@
       if (e.key === "Tab" || e.key === "Alt" || e.key === "Shift" || e.key === "Control" || e.key === "Meta") return;
       if (e.key === "Backspace") return;
       if (e.key.length !== 1) return;
+      releaseStrayFocus();
       e.preventDefault();
 
       if (!runtime.drillText[runtime.drillIndex]) return;
@@ -7088,6 +7327,8 @@
           e.preventDefault();
           const step = e.key === "ArrowRight" ? 1 : -1;
           const next = NAV_TAB_SCREENS[(tabIndex + step + NAV_TAB_SCREENS.length) % NAV_TAB_SCREENS.length];
+          // Wrapping past either end should still slide the way the arrow points.
+          runtime.pendingSlideDir = step;
           navButtonForScreen(next).click();
           return;
         }
@@ -7344,6 +7585,7 @@
       renderHomeBlocks();
       applyMetricVisibility();
       updateTopStatus();
+      attachStreakFlame();
       setInterval(updateTopStatus, 1000);
       window.addEventListener("focus", updateTopStatus);
       document.addEventListener("visibilitychange", updateTopStatus);
