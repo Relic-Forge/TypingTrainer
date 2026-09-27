@@ -2801,6 +2801,54 @@
     .settings-danger:hover {
       background: color-mix(in srgb, var(--bad) 10%, transparent);
     }
+    .settings-action {
+      min-width: 0;
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border-color: var(--border-strong);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .settings-action:hover {
+      background: var(--surface);
+    }
+    .shortcuts-dialog {
+      max-height: calc(100dvh - 48px);
+      overflow-y: auto;
+    }
+    .shortcut-group {
+      display: grid;
+      gap: 8px;
+    }
+    .shortcut-group h4 {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .shortcut-list {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      align-items: center;
+      gap: 8px 12px;
+      margin: 0;
+    }
+    .shortcut-list dt {
+      display: flex;
+      gap: 4px;
+      font-size: 15px;
+    }
+    .shortcut-list dd {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.4;
+    }
     .metric-hidden {
       display: none !important;
     }
@@ -3223,6 +3271,7 @@
     @media (hover: none) and (pointer: coarse) {
       kbd,
       .key-hints,
+      #shortcutsRow,
       .kbd-hint {
         display: none !important;
       }
@@ -3521,6 +3570,13 @@
                   </div>
                 </div>
               </div>
+              <div id="shortcutsRow" class="settings-row">
+                <div>
+                  <div class="settings-row-title">Keyboard shortcuts</div>
+                  <div class="settings-row-desc">See every shortcut the app supports.</div>
+                </div>
+                <button type="button" id="shortcutsBtn" class="settings-action">Show</button>
+              </div>
             </div>
           </section>
 
@@ -3564,6 +3620,40 @@
               Suggestions or bugs? Open an issue on <a href="https://github.com/Relic-Forge/TypingTrainer" target="_blank" rel="noopener">GitHub</a> or message darkrelicer on Discord.
             </div>
           </section>
+        </div>
+      </div>
+      <div id="shortcutsBackdrop" class="result-help-backdrop" hidden>
+        <div class="result-help-dialog shortcuts-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
+          <button type="button" id="shortcutsCloseBtn" class="dialog-close" aria-label="Close">×</button>
+          <h3 id="shortcutsTitle">Keyboard shortcuts</h3>
+          <div class="shortcut-group">
+            <h4>Home, Focus Points, and Statistics</h4>
+            <dl class="shortcut-list">
+              <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Switch tabs</dd>
+              <dt><kbd>,</kbd></dt><dd>Open Settings</dd>
+              <dt><kbd>Enter</kbd></dt><dd>Start the recommended block (Home)</dd>
+            </dl>
+          </div>
+          <div class="shortcut-group">
+            <h4>Settings and dialogs</h4>
+            <dl class="shortcut-list">
+              <dt><kbd>Esc</kbd></dt><dd>Close</dd>
+            </dl>
+          </div>
+          <div class="shortcut-group">
+            <h4>During a block</h4>
+            <dl class="shortcut-list">
+              <dt><kbd>Esc</kbd></dt><dd>Leave the block (can be turned off in Practice)</dd>
+            </dl>
+          </div>
+          <div class="shortcut-group">
+            <h4>Results</h4>
+            <dl class="shortcut-list">
+              <dt><kbd>Enter</kbd></dt><dd>Next block</dd>
+              <dt><kbd>R</kbd></dt><dd>Retry the same block</dd>
+              <dt><kbd>Esc</kbd></dt><dd>Back to Home</dd>
+            </dl>
+          </div>
         </div>
       </div>
       <div id="wipeConfirmBackdrop" class="result-help-backdrop" hidden>
@@ -3881,6 +3971,9 @@
       resetDataBtn: document.getElementById("resetDataBtn"),
       wipeConfirmBackdrop: document.getElementById("wipeConfirmBackdrop"),
       wipeCancelBtn: document.getElementById("wipeCancelBtn"),
+      shortcutsBtn: document.getElementById("shortcutsBtn"),
+      shortcutsBackdrop: document.getElementById("shortcutsBackdrop"),
+      shortcutsCloseBtn: document.getElementById("shortcutsCloseBtn"),
       wipeConfirmBtn: document.getElementById("wipeConfirmBtn"),
       liveWpmToggle: document.getElementById("liveWpmToggle"),
       accuracyToggle: document.getElementById("accuracyToggle"),
@@ -3966,100 +4059,333 @@
     };
     const DRILL_VISIBLE_LINES = 4;
 
-    const PARAGRAPH_THEMES = [
-      {
-        setting: ["practice block", "typing lesson", "review session", "focused drill"],
-        actor: ["the learner", "the student", "the typist", "the writer"],
-        verb: ["reviews", "practices", "checks", "repeats", "studies", "solves", "improves", "targets"],
-        object: ["the tricky pattern", "the slow transition", "the difficult movement", "the next exercise", "the useful prompt"],
-        method: ["with steady timing", "with calm control", "without rushing", "with careful accuracy", "before adding speed"],
-        result: ["the rhythm feels smoother", "the next line feels easier", "the weak spot becomes clearer", "the hands stay relaxed"]
-      },
-      {
-        setting: ["writing workshop", "quiet study room", "classroom exercise", "daily journal"],
-        actor: ["the writer", "the student", "the learner", "the class"],
-        verb: ["drafts", "edits", "reviews", "rewrites", "explains", "finishes", "checks"],
-        object: ["the short paragraph", "the clear example", "the exact answer", "the next question", "the final sentence"],
-        method: ["with focused attention", "with a relaxed pace", "without losing the idea", "before the final review"],
-        result: ["the paragraph stays clear", "the message sounds natural", "the answer becomes easier", "the idea remains connected"]
-      },
-      {
-        setting: ["team project", "design review", "planning meeting", "shared workspace"],
-        actor: ["the team", "the mentor", "the coach", "the group"],
-        verb: ["compares", "chooses", "explains", "questions", "adjusts", "organizes", "reviews"],
-        object: ["the next task", "the quality goal", "the quick example", "the exact plan", "the useful sequence"],
-        method: ["with clear notes", "with patient feedback", "without confusion", "before the next step"],
-        result: ["the plan feels organized", "the work moves forward", "the goal stays visible", "the next choice feels simple"]
-      },
-      {
-        setting: ["neighborhood cafe", "library table", "morning train", "small office"],
-        actor: ["the editor", "the researcher", "the assistant", "the planner"],
-        verb: ["marks", "sorts", "updates", "checks", "saves", "revises", "compares"],
-        object: ["the brief note", "the travel plan", "the meeting list", "the written summary", "the shared draft"],
-        method: ["before noon", "with a calm pace", "after one careful pass", "without breaking the thought"],
-        result: ["the note still sounds natural", "the idea stays easy to follow", "the final copy feels cleaner", "the next step is clear"]
-      },
-      {
-        setting: ["science lab", "music studio", "kitchen counter", "repair bench"],
-        actor: ["the guide", "the maker", "the analyst", "the instructor"],
-        verb: ["records", "labels", "tests", "adjusts", "measures", "balances", "explains"],
-        object: ["the sample card", "the timing chart", "the careful recipe", "the repair note", "the small checklist"],
-        method: ["while the room stays quiet", "with every detail in order", "before the final check", "without rushing the work"],
-        result: ["the process feels steady", "the record remains useful", "the result is easier to trust", "the whole task feels lighter"]
-      }
+    // Hand-written practice sentences. Drills pick from these by how well each
+    // one covers the typist's slow keys and letter pairs. Keep them plain:
+    // letters, spaces, commas, periods and question marks only.
+    const DRILL_SENTENCES = [
+      "The kettle clicked off just as the rain started to fall.",
+      "She packed a jacket, two books, and a bag of dried apricots.",
+      "We walked along the quiet river until the path turned to gravel.",
+      "The bakery on the corner sells warm bread before seven.",
+      "He fixed the squeaky hinge with a single drop of oil.",
+      "Our neighbor grows tomatoes, squash, and a few tall sunflowers.",
+      "The bus was late again, so I read the whole chapter at the stop.",
+      "A small fox crossed the field and vanished into the hedge.",
+      "They painted the kitchen a pale yellow that caught the morning light.",
+      "Please leave the spare key under the blue flower pot.",
+      "The museum was quiet except for the hum of the old heater.",
+      "My brother makes pancakes every Sunday and burns the first one.",
+      "The puzzle had a thousand pieces, and half of them were sky.",
+      "She joined the choir last winter and never missed a practice.",
+      "The lazy cat slept in a box of warm towels all afternoon.",
+      "We found a quiet table by the window and ordered soup.",
+      "The garden hose had a knot that nobody could untangle.",
+      "He jogged past the harbor while the fishing boats came in.",
+      "The recipe asks for a pinch of salt and a squeeze of lemon.",
+      "A gust of wind lifted the kite high above the dunes.",
+      "The library extended its hours during the exam weeks.",
+      "I wrote a quick note and stuck it to the fridge door.",
+      "The old clock in the hall chimes a little too loudly.",
+      "Our team won the quiz by a single question about volcanoes.",
+      "She keeps a journal by her bed and writes a line each night.",
+      "The zipper on my backpack broke halfway through the trip.",
+      "They shared a pizza on the porch and watched the storm roll in.",
+      "The mechanic checked the brakes and topped up the oil.",
+      "A dozen geese flew south in a crooked line.",
+      "He mixed blue and yellow paint until he found the right green.",
+      "The waves were calm, so we rowed out past the buoy.",
+      "My aunt knits warm socks for everyone in the family.",
+      "The train slowed down as it curved around the lake.",
+      "We packed sandwiches, fruit, and a thermos of hot cocoa.",
+      "The children built a fort out of blankets and chairs.",
+      "The jazz band played softly while people finished dinner.",
+      "She quickly sorted the mail into three neat piles.",
+      "The mountain road twists through thick pine forest.",
+      "I lost my gloves somewhere between the park and the bakery.",
+      "The farmer loaded crates of apples onto the truck.",
+      "Every morning the dog waits by the door for his walk.",
+      "The chef tasted the sauce and added a little more pepper.",
+      "We borrowed a ladder to reach the leaves in the gutter.",
+      "The exhibit showed maps drawn by early sailors.",
+      "A quiet voice in the back row asked the best question.",
+      "He keeps his tools in a wooden box under the stairs.",
+      "The snow fell all night and covered the cars by dawn.",
+      "Our flight was delayed, so we explored the airport shops.",
+      "The coffee shop smells of cinnamon and fresh toast.",
+      "She jumped over the puddle and landed right in another one.",
+      "The workers fixed the bridge before the heavy traffic returned.",
+      "A jar of honey sat next to a basket of warm muffins.",
+      "The violin teacher tapped her foot to keep the beat.",
+      "We planted six young trees along the back fence.",
+      "The quiet hum of the fridge was the only sound in the house.",
+      "He waxed the old skis and waited for the first snow.",
+      "The river was frozen, and the kids skated near the shore.",
+      "I could not find my keys until I checked my coat pocket.",
+      "The market sells fresh fish, spices, and bright flowers.",
+      "Grandpa still fixes his own bike with the same wrench.",
+      "The movie was long, but the ending was worth the wait.",
+      "A zebra at the zoo watched us with calm, patient eyes.",
+      "She wrapped the gift in brown paper and tied it with string.",
+      "The printer jammed twice before the report was finished.",
+      "We waited for the tide to go out before crossing the sand.",
+      "The kitten chased a moth around the living room.",
+      "He practiced the speech in front of the bathroom mirror.",
+      "The wooden deck creaks when you walk across it at night.",
+      "My sister collects old postcards from towns she has never seen.",
+      "The quarterly report was due on Friday, so we worked late.",
+      "A thick fog rolled over the valley and hid the farms.",
+      "The waiter brought extra napkins and a bowl of olives.",
+      "They hiked to the ridge and saw the whole bay below.",
+      "The squirrel buried an acorn and forgot where it was.",
+      "I baked a lemon cake, but it sank a little in the middle.",
+      "The ferry leaves the dock every hour until ten.",
+      "A box of old photos sat forgotten in the attic.",
+      "The crowd cheered when the runner crossed the finish line.",
+      "She fixed the leaky faucet with a new rubber washer.",
+      "The owl hooted twice from the dark branches above us.",
+      "We need milk, eggs, flour, and a dozen oranges.",
+      "The desk lamp flickered, so he replaced the bulb.",
+      "My uncle tells the same joke at every family dinner.",
+      "The children waved at the pilot as the plane taxied by.",
+      "A breeze carried the smell of cut grass across the yard.",
+      "The hotel room had a view of the busy square below.",
+      "He squeezed the last bit of toothpaste from the tube.",
+      "The rain stopped, and a pale rainbow appeared over the hills.",
+      "She typed the address carefully and pressed send.",
+      "The goat climbed onto the roof of the little shed.",
+      "The soup was too hot, so we let it cool by the window.",
+      "Our class visited a farm and fed the young calves.",
+      "The quiet street woke up when the delivery trucks arrived.",
+      "He jotted the phone number on the back of his hand.",
+      "The candle burned low and filled the room with a soft glow.",
+      "We played cards until the power came back on.",
+      "The fisherman mended his net while the gulls circled.",
+      "A tiny spider built a web across the mailbox.",
+      "She switched off the radio and listened to the rain.",
+      "The shop owner gave us a free sample of the new cheese.",
+      "The hikers rested beside a stream of clear, cold water.",
+      "My laptop battery died right before the meeting started.",
+      "The dentist said to floss more and drink less soda.",
+      "The playground was empty except for a boy on the swings.",
+      "We packed the van and drove north before sunrise.",
+      "The artist sketched the old bridge from three angles.",
+      "A quick shower cleared the dust from the city streets.",
+      "He brewed a pot of tea and opened the window wide.",
+      "The kids buzzed with excitement on the last day of school.",
+      "Our garden gate squeaks, so we always know who is coming.",
+      "The baker dusted the loaves with a thin layer of flour.",
+      "She measured the window twice before ordering the blinds.",
+      "The joke was silly, but everyone laughed anyway.",
+      "The storm knocked a branch onto the old fence.",
+      "A velvet curtain hung across the back of the stage.",
+      "We watched the fireworks from the top of the hill.",
+      "The cyclist fixed a flat tire in less than five minutes.",
+      "The clerk stamped the form and handed it back with a smile.",
+      "He found an old coin buried near the garden wall.",
+      "The puppy chewed one shoe and hid the other.",
+      "The market was crowded, so we came back after lunch.",
+      "She mixed the dough by hand and let it rise overnight.",
+      "The pilot announced a smooth flight and clear skies.",
+      "The boxes were heavy, but the movers carried them with ease.",
+      "A quiet evening at home sounded better than a party.",
+      "The teacher wrote three questions on the whiteboard.",
+      "We fixed the wobbly table with a folded piece of cardboard.",
+      "The bees moved slowly between the lavender and the roses.",
+      "He zipped his coat and stepped out into the cold.",
+      "The office printer only works if you ask it nicely.",
+      "The canoe drifted gently toward the far bank.",
+      "My friend knows the name of every bird in the park.",
+      "The oven timer buzzed just as the guests arrived.",
+      "She hung the laundry outside to dry in the sun.",
+      "The quarry was filled with clear green water.",
+      "A young deer froze at the edge of the woods.",
+      "The meeting ran long, and the coffee ran out.",
+      "He carved a small wooden duck for his niece.",
+      "The kids gathered shells and lined them up on the sand.",
+      "We took the long way home to see the autumn leaves.",
+      "The waiter juggled three plates without dropping a thing.",
+      "The phone buzzed on the table, but nobody moved.",
+      "She quietly closed the door so the baby would not wake.",
+      "The village square had a fountain and a row of old benches.",
+      "The plumber arrived early and fixed the pipe in an hour.",
+      "A heavy book fell from the shelf and startled the cat.",
+      "The sky turned orange and pink as the sun went down.",
+      "We made a list of chores and split them evenly.",
+      "The wind chimes rang softly on the back porch.",
+      "He tried to explain the rules, but the game was too complex.",
+      "The kayak tipped over, and we both laughed in the water.",
+      "The city park has a pond full of lazy ducks.",
+      "She painted a small fox on the side of the mailbox.",
+      "The student asked a question that stumped the whole room.",
+      "The truck backed up slowly, beeping the whole way.",
+      "We watched a documentary about whales and deep oceans.",
+      "The grocery bag split, and the apples rolled down the hill.",
+      "A pair of jays argued loudly in the maple tree.",
+      "The old radio still picks up the evening news.",
+      "He wore a thick wool sweater and a bright red scarf.",
+      "The ice cream melted faster than we could eat it.",
+      "Our road trip playlist had songs from every decade.",
+      "The picnic blanket was covered in crumbs and grass.",
+      "She blew out the candles and made a quiet wish.",
+      "The tailor fixed the hem of my jacket in ten minutes.",
+      "The wax figure looked so real that it made us jump.",
+      "We heard the thunder long before we saw the rain.",
+      "The clock tower has told the wrong time for years.",
+      "He built a birdhouse and hung it from the lowest branch.",
+      "The quilt on the bed was sewn by my great aunt.",
+      "The traffic light turned green, but the car did not move.",
+      "A small boat carried the mail to the island each week.",
+      "She keeps a spare umbrella in the back of the car.",
+      "The kids raced to the gate to meet the ice cream truck.",
+      "The recipe was simple, but the kitchen was a mess.",
+      "We climbed the lighthouse stairs and counted every step.",
+      "The fox slipped under the fence and trotted away.",
+      "His handwriting is neat, but his desk is a disaster.",
+      "The zoo keeper tossed fish to the hungry seals.",
+      "The sunflowers turned their heads toward the morning light.",
+      "My cousin plays the drums in a small jazz band.",
+      "The hallway smelled of fresh paint and new carpet.",
+      "We sat on the dock and let our feet hang in the lake.",
+      "The judge listened carefully before she gave her answer.",
+      "A pile of dry leaves crackled under our boots.",
+      "The waiter recommended the soup and a slice of pie.",
+      "He wrapped the fragile vase in three layers of paper.",
+      "The children quietly tiptoed past the sleeping dog.",
+      "The bike path follows the old railway line out of town.",
+      "She checked the weather and packed an extra sweater.",
+      "The barn door swung open in the strong wind.",
+      "A jogger waved as she passed us on the trail.",
+      "The chess club meets every Tuesday in the library.",
+      "The lamp cast long shadows across the wooden floor.",
+      "We found a quiet beach with soft white sand.",
+      "The squeaky wheel on the cart drove everyone crazy.",
+      "He boxed up his old books and gave them to the school.",
+      "The pond froze solid, and the ducks walked on the ice.",
+      "My grandmother makes the best vegetable soup in town.",
+      "The alarm went off, and I hit snooze three times.",
+      "The mayor cut the ribbon and opened the new park.",
+      "A silver van pulled into the driveway next door.",
+      "The kids made lemonade and sold it for a quarter a cup.",
+      "She joked that the plant was the only thing she could not kill.",
+      "The subway car was packed, so we stood near the doors.",
+      "He polished his shoes the night before the interview.",
+      "The garden looked wild after a week of heavy rain.",
+      "We watched the stars from the roof until midnight.",
+      "The exam was hard, but I finished with time to spare.",
+      "A golden retriever carried the newspaper to the porch.",
+      "The toaster popped, and the smell of bread filled the kitchen.",
+      "The boat rocked gently as the waves passed beneath it.",
+      "She organized her closet by color and season.",
+      "The quiet library felt like the safest place in the world.",
+      "The sheep huddled together against the cold wind.",
+      "He tuned the guitar and played a slow, sad song.",
+      "The windows fogged up while the soup simmered on the stove.",
+      "We bought fresh bread, soft cheese, and a bunch of grapes.",
+      "The cat knocked a glass off the counter and walked away.",
+      "My neighbor jogs every morning, even in the snow.",
+      "The storm passed, and the birds started singing again.",
+      "A long queue formed outside the new bakery.",
+      "The kids learned to juggle with three soft balls.",
+      "The mechanic wiped his hands and closed the hood.",
+      "She picked wild berries along the edge of the road.",
+      "The old map showed a road that no longer exists.",
+      "We lit a small fire and roasted marshmallows.",
+      "The museum guide told us a story about every painting.",
+      "He dozed off on the couch during the second movie.",
+      "The fountain in the square sparkled in the afternoon sun.",
+      "A soft knock on the door made the dog bark.",
+      "The trail was steep, so we stopped often to rest.",
+      "The pianist bowed, and the audience rose to its feet.",
+      "Our kitchen table is covered in maps and travel plans.",
+      "She texted to say she would be ten minutes late.",
+      "The breeze smelled of salt and seaweed.",
+      "The farmer fixed the fence before the cows got out.",
+      "We carried the heavy sofa up four flights of stairs.",
+      "The quick brown fox jumps over the lazy dog.",
+      "A bright kite with a long tail danced above the beach.",
+      "The train conductor checked every ticket twice.",
+      "He fixed a quick breakfast of eggs and toast.",
+      "The rain drummed on the tin roof all night long.",
+      "The shop window was full of jars of colorful candy.",
+      "She hummed a tune while she washed the dishes.",
+      "The dog dug a hole under the fence and escaped again.",
+      "We traded books and promised to swap again next month.",
+      "The frozen lake glittered under a clear blue sky.",
+      "A mix of maple and oak trees lined the long driveway.",
+      "The crossword was easy until the last few clues.",
+      "He jumped when the toaster popped behind him.",
+      "The market vendor weighed the peaches on an old scale.",
+      "The hills were green after the spring rain.",
+      "My friend drew a map of the maze on a napkin.",
+      "The waitress remembered our order from last week.",
+      "She walked the dog around the block before bed.",
+      "The pumpkin patch was muddy but full of families.",
+      "A jet flew low over the bay and made the windows shake.",
+      "The children watched the fish swim in the glass tank.",
+      "The lawn mower sputtered and finally started.",
+      "We explored a small cave near the edge of the cliffs.",
+      "The tea was strong, so she added a splash of milk.",
+      "The quiet valley was dotted with sheep and stone walls.",
+      "He kept the receipt in case the jacket did not fit.",
+      "The sidewalk was covered in chalk drawings of stars.",
+      "Our old van needs new tires before the long drive.",
+      "The owl blinked slowly and turned its head toward us.",
+      "She adjusted the mirror and pulled out of the driveway.",
+      "The workshop smelled of sawdust and fresh varnish.",
+      "We wrapped up in blankets and watched the rain.",
+      "The toddler giggled every time the puppy licked his nose.",
+      "The parade moved slowly down the crowded main street.",
+      "A fresh layer of snow made the town look brand new.",
+      "He wrote the grocery list in very small letters.",
+      "The boxer skipped rope for ten minutes to warm up.",
+      "The sun was bright, but the wind was cold.",
+      "She keeps her keys on a hook by the front door.",
+      "The river carried leaves and small sticks toward the sea.",
+      "We rang the bell and waited on the porch.",
+      "The bread was crusty outside and soft inside.",
+      "A flock of starlings swirled over the empty field.",
+      "The kids built a snowman with a carrot for a nose.",
+      "He quietly packed his bag and slipped out before dawn.",
+      "The new bridge cut the drive to town in half.",
+      "Our cat sleeps in a sunny spot by the window.",
+      "The squash soup needed more salt and a little cream.",
+      "The coach blew the whistle and the players ran back.",
+      "She jotted down ideas for the story on a paper napkin.",
+      "The wooden boat was painted blue with a white stripe.",
+      "We waved goodbye as the train pulled out of the station.",
+      "The ice on the pond cracked with a sharp, loud pop.",
+      "The oven was hot, so we baked the pizza in ten minutes.",
+      "A wax seal kept the old letter closed for decades.",
+      "He fixed the zipper on his tent with a paper clip.",
+      "The jury listened quietly to the final witness.",
+      "Six boxes of books were stacked by the door.",
+      "The quiz show host asked an extremely tricky question.",
+      "Jovial voices drifted from the kitchen into the yard.",
+      "The jeweler fixed the clasp on her silver necklace.",
+      "A dozen kids joined the swim club this summer.",
+      "The expert examined the vase and guessed its age.",
+      "We quickly packed the jam jars into the wicker basket.",
+      "The lazy afternoon drifted by without a single plan.",
+      "Frozen peas work well as an ice pack in a pinch.",
+      "The taxi driver knew every shortcut across the city.",
+      "Jack fixed the broken gate with wire and a few nails.",
+      "Her quick reply made the whole room laugh.",
+      "The fox and the hound became unlikely friends.",
+      "A hazy moon rose slowly over the quiet bay.",
+      "The janitor waxed the floors after everyone went home.",
+      "We queued for an hour to see the new exhibit.",
+      "The oxen pulled the heavy cart up the muddy lane.",
+      "My jacket has a pocket just big enough for a book.",
+      "The judge asked for quiet before reading the verdict.",
+      "The blizzard kept us inside for three long days.",
+      "Zoe mixed the juice with sparkling water and ice.",
+      "The vivid sunset made the lake glow like copper.",
+      "A quick jog around the block cleared my head.",
+      "The wizard in the story had a very long, fuzzy beard.",
+      "The box of jigsaw pieces sat untouched on the shelf.",
+      "Kevin quietly fixed the wobbly leg of the kitchen table."
     ];
-
-    const TARGET_WORDS = [
-      "able","about","above","accurate","active","advice","again","agent","align","almost","amber","answer","around","artist","author",
-      "awkward","balanced","basic","beacon","better","bright","buffer","cable","camera","careful","challenge","circle","clear","coach",
-      "complex","control","correct","craft","daily","decide","detail","difficult","direct","editor","effect","exact","example","exercise",
-      "expert","explain","extra","fabric","factor","feedback","finish","focused","gentle","global","habit","hidden","improve","inside",
-      "journal","judge","juggle","junior","keyboard","kettle","kindly","lesson","letter","local","memory","method","minute","modern",
-      "natural","notice","object","office","orange","paragraph","pattern","practice","precise","project","quality","question","quick",
-      "quiet","quiz","reason","relaxed","repeat","review","rhythm","sample","science","sequence","signal","simple","smooth","steady",
-      "student","syntax","target","timing","typing","useful","value","visual","window","writer","yellow","zebra","zesty","zippy","cozy",
-      "dizzy","lazy","hazy","azure","boxy","oxygen","pixel","index","matrix","vertex","extra","fixable","mixed","quartz","request",
-      "queue","equal","unique","guide","adjust","major","enjoy","object","subject","focus","logic","choice","voice","notice","social",
-      "archive","orchard","search","force","source","fiction","efficient","final","finger","figure","giant","engine","origin","region",
-      "digital","signal","article","classic","clinic","public","magic","picnic","topic","service","package","puzzle","frozen","bronze",
-      "jacket","joiner","jovial","objected","adjacent","projector","textile","context","explore","flexible","fixture","maximum","boxcar"
-    ];
-
-    const FOCUS_CONNECTORS = [
-      "first,", "next,", "then,", "after that,", "later,", "for review,", "meanwhile,", "before long,", "near the end,", "finally,"
-    ];
-
-    const FOCUS_DETAILS = [
-      "one detail stays easy to remember",
-      "the sentence keeps its normal rhythm",
-      "the note still reads like something a person would write",
-      "the next choice feels less awkward",
-      "the whole line stays connected",
-      "the idea remains clear from start to finish",
-      "the pattern appears without feeling forced",
-      "the practice stays focused but not mechanical"
-    ];
-
-    const SENTENCE_BUILDERS = [
-      (parts) => `${parts.connector} in the ${parts.setting}, ${parts.actor} ${parts.verb} ${parts.object} and includes ${parts.focusPhrase}.`,
-      (parts) => `${parts.connector} ${parts.actor} adds ${parts.focusPhrase} to ${parts.object}, and ${parts.detail}.`,
-      (parts) => `${parts.connector} ${parts.actor} ${parts.verb} ${parts.object} while using ${parts.focusPhrase}, so ${parts.result}.`,
-      (parts) => `${parts.connector} ${parts.object} includes ${parts.focusPhrase} because ${parts.detail}.`,
-      (parts) => `${parts.connector} after the ${parts.setting}, ${parts.actor} notices ${parts.focusPhrase} and ${parts.result}.`,
-      (parts) => `${parts.connector} ${parts.actor} keeps ${parts.focusPhrase} in ${parts.object} while ${parts.detail}.`,
-      (parts) => `${parts.connector} ${parts.actor} ${parts.verb} ${parts.focusPhrase} before ${parts.object} moves forward.`,
-      (parts) => `${parts.connector} ${parts.actor} writes ${parts.object} around ${parts.focusPhrase}, then ${parts.result}.`,
-      (parts) => `${parts.connector} ${parts.focusPhrase} appears in ${parts.object} as ${parts.actor} ${parts.verb} ${parts.method}.`,
-      (parts) => `${parts.connector} ${parts.actor} returns to ${parts.focusPhrase} once ${parts.detail}.`
-    ];
-
-    const COMPACT_SENTENCE_BUILDERS = [
-      (parts) => `${parts.connector} ${parts.actor} practices ${parts.focusPhrase}.`,
-      (parts) => `${parts.connector} ${parts.focusPhrase} appears in ${parts.object}.`,
-      (parts) => `${parts.connector} ${parts.actor} uses ${parts.focusPhrase} with steady timing.`,
-      (parts) => `${parts.connector} ${parts.object} includes ${parts.focusPhrase}.`,
-      (parts) => `${parts.connector} ${parts.actor} reviews ${parts.focusPhrase} before moving on.`
-    ];
+    const DRILL_SENTENCE_BANK = DRILL_SENTENCES.map(text => ({ text, lower: text.toLowerCase() }));
 
     function now() {
       return performance.now();
@@ -4228,9 +4554,29 @@
       resetSavedData();
     }
 
+    function setShortcutsOpen(open, options = {}) {
+      const backdrop = ui.shortcutsBackdrop;
+      if (!backdrop) return;
+      if (open) {
+        backdrop.hidden = false;
+        requestAnimationFrame(() => {
+          backdrop.classList.add("visible");
+          ui.shortcutsCloseBtn.focus();
+        });
+        return;
+      }
+      const wasOpen = backdrop.classList.contains("visible");
+      backdrop.classList.remove("visible");
+      window.setTimeout(() => {
+        if (!backdrop.classList.contains("visible")) backdrop.hidden = true;
+      }, 190);
+      if (wasOpen && options.restoreFocus !== false) ui.shortcutsBtn.focus();
+    }
+
     function closeSettings() {
       if (activeScreenId !== "settingsScreen") return;
       setWipeConfirmOpen(false);
+      setShortcutsOpen(false, { restoreFocus: false });
       const targetId = settingsUnderlayScreenId || (hasCompletedStartup() ? "homeScreen" : "welcomeScreen");
       const target = document.getElementById(targetId);
       if (!target) return;
@@ -5245,12 +5591,16 @@
       };
       state.stats.sessions.push(record);
       localStorage.setItem(STARTUP_COMPLETE_KEY, "true");
+      const streakAward = awardDailyStreak();
       saveSessionHistory(record);
 
       renderResults();
       renderHomeBlocks();
       updateTopStatus();
       switchPhase("results");
+      if (streakAward.awarded) {
+        setTimeout(() => playStreakCelebration(streakAward.from, streakAward.to), 120);
+      }
       saveState();
     }
 
@@ -6275,17 +6625,7 @@
     function hasWordForBigram(value) {
       const fragment = String(value || "").toLowerCase();
       if (!/^[a-z]{2}$/.test(fragment)) return false;
-      return TARGET_WORDS.some(word => word.toLowerCase().includes(fragment));
-    }
-
-    function scoreTextForTargets(text, targets) {
-      const normalized = text.toLowerCase();
-      return targets.reduce((score, target) => {
-        const hits = countOccurrences(normalized, target.value);
-        if (!hits) return score;
-        const repeatPenalty = hits > 3 ? (hits - 3) * target.weight * 0.35 : 0;
-        return score + hits * target.weight - repeatPenalty;
-      }, 0);
+      return DRILL_SENTENCE_BANK.some(entry => entry.lower.includes(fragment));
     }
 
     function chooseWeighted(items, weightFn) {
@@ -6301,11 +6641,6 @@
 
     function sample(items) {
       return items[Math.floor(Math.random() * items.length)];
-    }
-
-    function capitalizeSentence(text) {
-      const trimmed = text.replace(/\s+/g, " ").trim();
-      return `${trimmed[0].toUpperCase()}${trimmed.slice(1)}`;
     }
 
     function readGeneratedSentenceHistory() {
@@ -6329,12 +6664,6 @@
       }
     }
 
-    function splitGeneratedSentences(text) {
-      return (text.match(/[^.!?]+[.!?]/g) || [])
-        .map(sentence => sentence.replace(/\s+/g, " ").trim())
-        .filter(Boolean);
-    }
-
     function targetValue(target) {
       return String((target && target.value) || "").toLowerCase();
     }
@@ -6355,94 +6684,6 @@
       return 1;
     }
 
-    function getWordPoolForTarget(target) {
-      const value = targetValue(target);
-      if (!value) return TARGET_WORDS;
-      const matches = TARGET_WORDS.filter(word => word.toLowerCase().includes(value));
-      if (matches.length) return matches;
-      return [`letter ${value}`];
-    }
-
-    function formatFocusTerm(term) {
-      if (/^letter [a-z]$/.test(term)) return `the ${term}`;
-      const formats = [
-        `the word ${term}`,
-        `the term ${term}`,
-        `a note using ${term}`,
-        `an example with ${term}`
-      ];
-      return sample(formats);
-    }
-
-    function joinNaturalList(items) {
-      if (items.length <= 1) return items[0] || "";
-      if (items.length === 2) return `${items[0]} and ${items[1]}`;
-      return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
-    }
-
-    function chooseTargetTerm(target, usedTerms, blockedTerms = new Set()) {
-      const fullPool = getWordPoolForTarget(target);
-      const freshPool = fullPool.filter(term => !blockedTerms.has(term));
-      const pool = freshPool.length ? freshPool : fullPool;
-      return chooseWeighted(pool, term => {
-        const termUsePenalty = (usedTerms[term] || 0) * 1.4;
-        return 1 + scoreTextForTargets(term, [target]) * 2.8 - termUsePenalty;
-      });
-    }
-
-    function buildTargetPhrase(assignedTargets, allTargets, usedTerms) {
-      if (!assignedTargets.length && !allTargets.length) return formatFocusTerm(sample(TARGET_WORDS));
-      const activeTargets = assignedTargets.length ? assignedTargets : [chooseWeighted(allTargets, target => target.weight || 1)];
-      const blockedTerms = new Set();
-      const localUse = { ...usedTerms };
-      const terms = activeTargets.map(target => {
-        const term = chooseTargetTerm(target, localUse, blockedTerms);
-        blockedTerms.add(term);
-        localUse[term] = (localUse[term] || 0) + 4;
-        return term;
-      });
-      return joinNaturalList(terms.map(formatFocusTerm));
-    }
-
-    function contentWordSet(text) {
-      const stopWords = new Set(["about", "after", "again", "because", "before", "during", "every", "first", "later", "still", "their", "there", "these", "thing", "while", "with", "without"]);
-      return new Set((text.toLowerCase().match(/[a-z]{4,}/g) || []).filter(word => !stopWords.has(word)));
-    }
-
-    function sentenceSimilarity(a, b) {
-      const aWords = contentWordSet(a);
-      const bWords = contentWordSet(b);
-      if (!aWords.size || !bWords.size) return 0;
-      let overlap = 0;
-      aWords.forEach(word => {
-        if (bWords.has(word)) overlap += 1;
-      });
-      return overlap / (aWords.size + bWords.size - overlap);
-    }
-
-    function repeatedContentPenalty(text) {
-      const counts = {};
-      contentWordSet(text).forEach(word => {
-        const hits = countOccurrences(text.toLowerCase(), word);
-        if (hits > 1) counts[word] = hits;
-      });
-      return Object.values(counts).reduce((penalty, hits) => penalty + (hits - 1) * 8, 0);
-    }
-
-    function noveltyPenalty(text, used, recent) {
-      if (used.has(text)) return 200;
-      let penalty = repeatedContentPenalty(text);
-      recent.slice(-36).forEach(previous => {
-        const similarity = sentenceSimilarity(text, previous);
-        if (similarity > 0.62) penalty += similarity * 34;
-      });
-      used.forEach(previous => {
-        const similarity = sentenceSimilarity(text, previous);
-        if (similarity > 0.56) penalty += similarity * 42;
-      });
-      return penalty;
-    }
-
     function buildTargetPlan(targets, blockType) {
       return targets.map(target => ({
         target,
@@ -6450,68 +6691,9 @@
       }));
     }
 
-    function pickTargetsForSentence(plans, index) {
-      const unmet = plans.filter(plan => plan.remaining > 0);
-      if (!plans.length) return [];
-      if (!unmet.length) return [chooseWeighted(plans, plan => plan.target.weight || 1).target];
-      const primary = chooseWeighted(unmet, plan => plan.remaining * (plan.target.weight || 1));
-      const secondaryPool = unmet.filter(plan => plan !== primary);
-      const shouldAddSecond = secondaryPool.length && (index % 2 === 1 || primary.remaining <= 1);
-      const picked = [primary.target];
-      if (shouldAddSecond) picked.push(chooseWeighted(secondaryPool, plan => plan.remaining * (plan.target.weight || 1)).target);
-      return picked;
-    }
-
-    function buildGeneratedSentence(theme, targets, index, assignedTargets, usedTerms) {
-      const actor = sample(theme.actor);
-      const parts = {
-        connector: FOCUS_CONNECTORS[index % FOCUS_CONNECTORS.length],
-        setting: sample(theme.setting),
-        actor,
-        verb: sample(theme.verb),
-        object: sample(theme.object),
-        method: sample(theme.method),
-        result: sample(theme.result),
-        detail: FOCUS_DETAILS[index % FOCUS_DETAILS.length],
-        focusPhrase: buildTargetPhrase(assignedTargets, targets, usedTerms)
-      };
-      const builders = targetDrillLineCount() < 5 ? COMPACT_SENTENCE_BUILDERS : SENTENCE_BUILDERS;
-      const builder = builders[index % builders.length];
-      return capitalizeSentence(builder(parts));
-    }
-
-    function buildGeneratedCandidates(theme, targets, index, assignedTargets, used, recent, usedTerms) {
-      const candidates = [];
-      for (let i = 0; i < 34; i++) {
-        const text = buildGeneratedSentence(theme, targets, index, assignedTargets, usedTerms);
-        const missesAssigned = assignedTargets.some(target => countTargetHits(text, target) === 0);
-        const assignedScore = assignedTargets.reduce((sum, target) => sum + countTargetHits(text, target) * (target.weight || 1) * 4, 0);
-        candidates.push({
-          text,
-          score: scoreTextForTargets(text, targets) + assignedScore - noveltyPenalty(text, used, recent) - (missesAssigned ? 1000 : 0)
-        });
-      }
-      return candidates;
-    }
-
-    function selectGeneratedCandidate(candidates) {
-      const ordered = candidates.slice().sort((a, b) => b.score - a.score);
-      const top = ordered.slice(0, 7);
-      const floor = top[top.length - 1] ? top[top.length - 1].score : 0;
-      return chooseWeighted(top, candidate => 1 + candidate.score - floor);
-    }
-
     function applyCoverageToPlan(plans, text) {
       plans.forEach(plan => {
         plan.remaining = Math.max(0, plan.remaining - countTargetHits(text, plan.target));
-      });
-    }
-
-    function rememberTermsFromSentence(usedTerms, text) {
-      TARGET_WORDS.forEach(word => {
-        if (countOccurrences(text.toLowerCase(), word.toLowerCase()) > 0) {
-          usedTerms[word] = (usedTerms[word] || 0) + 1;
-        }
       });
     }
 
@@ -6547,50 +6729,53 @@
       return Math.round(targetDrillLineCount() * estimatedDrillLineCapacity());
     }
 
+    function sentenceTargetScore(entry, plans) {
+      return plans.reduce((score, plan) => {
+        const hits = countOccurrences(entry.lower, targetValue(plan.target));
+        if (!hits) return score;
+        const weight = plan.target.weight || 1;
+        // Unmet coverage dominates; extra hits still help, with diminishing returns.
+        return score + Math.min(hits, plan.remaining) * weight * 4 + Math.min(hits, 3) * weight;
+      }, 0);
+    }
+
+    function shuffled(items) {
+      const copy = items.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
     function generateDrillText(blockType = state.activeBlockType || "mixed") {
       const targets = getFocusTargets(blockType);
-      const targetLineCapacity = estimatedDrillLineCapacity();
-      const targetChars = Math.round(targetDrillLineCount() * targetLineCapacity);
-      const sentenceCount = targets.length ? Math.max(6, targets.length * 3) : 7;
-      const result = [];
-      const used = new Set();
-      const themeOffset = Math.floor(Math.random() * PARAGRAPH_THEMES.length);
-      const recent = readGeneratedSentenceHistory();
-      const usedTerms = {};
+      const lineCapacity = estimatedDrillLineCapacity();
+      const targetChars = Math.round(targetDrillLineCount() * lineCapacity);
       const plans = buildTargetPlan(targets, blockType);
-      const isCloseEnough = () => {
-        if (!result.length) return false;
-        return result.join(" ").length >= targetChars - targetLineCapacity * 0.45 && plans.every(plan => plan.remaining <= 0);
-      };
+      const recent = new Set(readGeneratedSentenceHistory().slice(-120));
+      const available = shuffled(DRILL_SENTENCE_BANK);
+      const covers = (entry, plan) => countOccurrences(entry.lower, targetValue(plan.target)) > 0;
+      const maxSentences = Math.ceil(targetChars / 30) + plans.length + 4;
+      const result = [];
+      let length = 0;
 
-      for (let i = 0; i < sentenceCount; i++) {
-        if (isCloseEnough()) break;
-        const theme = PARAGRAPH_THEMES[(themeOffset + i) % PARAGRAPH_THEMES.length];
-        const assignedTargets = pickTargetsForSentence(plans, i);
-        const candidates = buildGeneratedCandidates(theme, targets, i, assignedTargets, used, recent, usedTerms);
-        const selected = targets.length ? selectGeneratedCandidate(candidates) : sample(candidates);
-        result.push(selected.text);
-        used.add(selected.text);
-        rememberTermsFromSentence(usedTerms, selected.text);
-        applyCoverageToPlan(plans, selected.text);
-        if (result.join(" ").length >= targetChars && plans.every(plan => plan.remaining <= 0)) break;
-      }
-
-      let guard = 0;
-      while (plans.some(plan => plan.remaining > 0) && guard < targets.length * 3) {
-        const assignedTargets = plans
-          .filter(plan => plan.remaining > 0)
-          .sort((a, b) => b.remaining - a.remaining)
-          .slice(0, 2)
-          .map(plan => plan.target);
-        const theme = PARAGRAPH_THEMES[(themeOffset + result.length) % PARAGRAPH_THEMES.length];
-        const candidates = buildGeneratedCandidates(theme, targets, result.length, assignedTargets, used, recent, usedTerms);
-        const selected = selectGeneratedCandidate(candidates);
-        result.push(selected.text);
-        used.add(selected.text);
-        rememberTermsFromSentence(usedTerms, selected.text);
-        applyCoverageToPlan(plans, selected.text);
-        guard += 1;
+      while (available.length && result.length < maxSentences) {
+        // Only chase targets some remaining sentence can still cover.
+        const unmet = plans.filter(plan => plan.remaining > 0 && available.some(entry => covers(entry, plan)));
+        if (!unmet.length && length >= targetChars - lineCapacity * 0.45) break;
+        const scored = available.map(entry => ({ entry, score: sentenceTargetScore(entry, plans) }));
+        let pool = unmet.length ? scored.filter(c => unmet.some(plan => covers(c.entry, plan))) : scored;
+        // Prefer sentences not seen in recent blocks, but reuse one if it is the only way to cover a target.
+        const fresh = pool.filter(c => !recent.has(c.entry.text));
+        if (fresh.length) pool = fresh;
+        const ranked = pool.sort((a, b) => b.score - a.score).slice(0, unmet.length ? 6 : 24);
+        const floor = ranked[ranked.length - 1].score;
+        const picked = chooseWeighted(ranked, candidate => 1 + candidate.score - floor).entry;
+        available.splice(available.indexOf(picked), 1);
+        result.push(picked.text);
+        length += picked.text.length + 1;
+        applyCoverageToPlan(plans, picked.text);
       }
 
       rememberGeneratedSentences(result);
@@ -6849,9 +7034,26 @@
       return !!active && active !== document.body && !!el && el.contains(active) && (!selector || active.matches(selector));
     }
 
+    const NAV_TAB_SCREENS = ["homeScreen", "focusPointsScreen", "statisticsScreen"];
+
+    function navButtonForScreen(screenId) {
+      if (screenId === "focusPointsScreen") return ui.navFocusBtn;
+      if (screenId === "statisticsScreen") return ui.navStatsBtn;
+      return ui.navHomeBtn;
+    }
+
+    function isEditableTarget(target) {
+      return !!target && !!target.closest && !!target.closest("input, textarea, select, [contenteditable='true'], [role='listbox']");
+    }
+
     function handleShortcutKeydown(e) {
       const isEsc = e.key === "Escape" || e.key === "Esc";
       if (isEsc) {
+        if (isBackdropOpen(ui.shortcutsBackdrop)) {
+          e.preventDefault();
+          setShortcutsOpen(false);
+          return;
+        }
         if (isWipeConfirmOpen()) {
           e.preventDefault();
           setWipeConfirmOpen(false);
@@ -6879,6 +7081,22 @@
         }
       }
       if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+
+      const tabIndex = NAV_TAB_SCREENS.indexOf(activeScreenId);
+      if (tabIndex !== -1 && !isBackdropOpen(ui.focusHelpBackdrop) && !isEditableTarget(e.target)) {
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault();
+          const step = e.key === "ArrowRight" ? 1 : -1;
+          const next = NAV_TAB_SCREENS[(tabIndex + step + NAV_TAB_SCREENS.length) % NAV_TAB_SCREENS.length];
+          navButtonForScreen(next).click();
+          return;
+        }
+        if (e.key === ",") {
+          e.preventDefault();
+          openSettings();
+          return;
+        }
+      }
 
       if (activeScreenId === "resultsPhase" && state.phase === "results") {
         if (now() - runtime.resultShownAt < 450) return;
@@ -6945,6 +7163,10 @@
       ui.speedBlockBtn.addEventListener("click", () => beginHomeBlock("secondary"));
       ui.settingsHomeBtn.addEventListener("click", closeSettings);
       ui.settingsScreen.addEventListener("click", e => {
+        if (ui.shortcutsBackdrop.contains(e.target)) {
+          if (e.target === ui.shortcutsBackdrop) setShortcutsOpen(false);
+          return;
+        }
         if (ui.wipeConfirmBackdrop.contains(e.target)) {
           if (e.target === ui.wipeConfirmBackdrop) setWipeConfirmOpen(false);
           return;
@@ -6953,6 +7175,8 @@
       });
       ui.resetDataBtn.addEventListener("click", () => setWipeConfirmOpen(true));
       ui.wipeCancelBtn.addEventListener("click", () => setWipeConfirmOpen(false));
+      ui.shortcutsBtn.addEventListener("click", () => setShortcutsOpen(true));
+      ui.shortcutsCloseBtn.addEventListener("click", () => setShortcutsOpen(false));
       ui.wipeConfirmBtn.addEventListener("click", confirmWipeData);
       ui.liveWpmToggle.addEventListener("click", () => updateSetting("showLiveWpm", !state.settings.showLiveWpm));
       ui.accuracyToggle.addEventListener("click", () => updateSetting("showAccuracy", !state.settings.showAccuracy));
