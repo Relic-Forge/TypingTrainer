@@ -1956,30 +1956,33 @@
       color: var(--bad);
     }
     .results-screen {
-      --result-title-left: clamp(74px, 7.6vw, 146px);
-      --result-title-top: clamp(58px, 11.5vh, 124px);
-      --result-heatmap-left: clamp(88px, 10.5vw, 202px);
-      --result-heatmap-top: clamp(300px, 40.5vh, 438px);
-      --result-score-left: clamp(690px, 55.7vw, 1070px);
-      --result-score-top: clamp(150px, 20.9vh, 226px);
-      --result-score-size: clamp(270px, 26.9vw, 516px);
-      --result-score-small-size: clamp(132px, 13.2vw, 254px);
-      --result-heatmap-width: min(46vw, 650px);
-      --result-details-top: calc(var(--result-score-top) + var(--result-score-small-size) + 152px);
-      --result-details-max-height: calc(100dvh - var(--result-details-top) - 132px);
+      /* Flowing two-column grid: the score column spans the full height so the
+         Details panel can grow without ever running into the action buttons. */
+      --result-ease: cubic-bezier(0.22, 0.8, 0.22, 1);
+      --result-score-size: clamp(200px, min(25vw, 44vh), 420px);
+      --result-score-small-size: clamp(92px, min(9vw, 16vh), 140px);
+      --result-column-width: clamp(300px, 31vw, 480px);
       position: relative;
       width: 100%;
       height: 100%;
       min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--result-column-width);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        "title score"
+        "heat score"
+        "actions score";
+      column-gap: clamp(32px, 5vw, 128px);
+      row-gap: clamp(12px, 2.5vh, 28px);
       background: var(--app-bg);
       color: var(--text);
-      padding: clamp(38px, 6.5vh, 78px) clamp(28px, 7vw, 138px) clamp(24px, 5vh, 58px);
-      overflow: hidden;
+      padding: clamp(24px, 7vh, 96px) clamp(28px, 6vw, 160px) clamp(20px, 5vh, 56px);
+      overflow-x: hidden;
+      overflow-y: auto;
     }
     .results-title {
-      position: absolute;
-      top: var(--result-title-top);
-      left: var(--result-title-left);
+      grid-area: title;
       margin: 0;
       font-size: var(--screen-title-size);
       line-height: 1.1;
@@ -1998,15 +2001,10 @@
       margin-top: 18px;
     }
     .results-heatmap-area {
-      position: absolute;
-      left: var(--result-heatmap-left);
-      top: var(--result-heatmap-top);
-      width: var(--result-heatmap-width);
-      transform-origin: left center;
-      transition: transform 320ms cubic-bezier(0.22, 0.8, 0.22, 1);
-    }
-    .results-screen.more-open .results-heatmap-area {
-      transform: scale(0.84);
+      grid-area: heat;
+      align-self: center;
+      justify-self: center;
+      width: min(100%, 650px);
     }
     .results-keyboard {
       gap: clamp(8px, 1vw, 14px);
@@ -2089,20 +2087,22 @@
       to { transform: scale(1); }
     }
     .results-score-area {
-      position: absolute;
-      left: var(--result-score-left);
-      top: var(--result-score-top);
-      width: var(--result-score-size);
-      display: grid;
-      justify-items: start;
-      gap: clamp(18px, 2.3vh, 28px);
-      transition: none;
+      grid-area: score;
+      align-self: center;
+      justify-self: center;
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
-    .results-screen.more-open .results-score-area {
-      gap: 10px;
+    .results-score-area > * + * {
+      margin-top: 14px;
     }
     .score-donut {
       --score: 0;
+      flex: none;
       width: var(--result-score-size);
       aspect-ratio: 1;
       position: relative;
@@ -2111,7 +2111,7 @@
       border: 0;
       border-radius: 50%;
       background: conic-gradient(var(--result-accent) calc(var(--score) * 1%), var(--surface) 0);
-      transition: width 340ms cubic-bezier(0.22, 0.8, 0.22, 1), background 900ms ease;
+      transition: width 380ms var(--result-ease), background 900ms ease;
     }
     .results-screen.more-open .score-donut {
       width: var(--result-score-small-size);
@@ -2129,16 +2129,19 @@
       z-index: 1;
       display: grid;
       justify-items: center;
-      gap: 4px;
     }
     .score-value {
       position: relative;
       z-index: 1;
-      font-size: clamp(56px, 5.4vw, 96px);
+      font-size: clamp(52px, min(5.2vw, 9vh), 96px);
       line-height: 1;
       font-weight: 700;
       color: var(--text);
       font-variant-numeric: tabular-nums;
+      transition: font-size 380ms var(--result-ease);
+    }
+    .results-screen.more-open .score-value {
+      font-size: clamp(28px, min(2.6vw, 4.4vh), 40px);
     }
     .score-caption {
       color: var(--muted);
@@ -2147,72 +2150,41 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
-    .results-screen.more-open .score-value {
-      font-size: clamp(30px, 3.2vw, 42px);
-    }
-    .results-screen.more-open .score-caption {
-      display: none;
-    }
-    .result-more-btn {
-      order: 4;
+    .score-caption-row {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      justify-self: center;
-      margin-left: 0;
-      min-height: 36px;
-      border: 0;
-      border-radius: var(--radius-sm);
-      background: transparent;
-      color: var(--muted);
-      font-size: 15px;
-      font-weight: 600;
-      padding: 0 10px;
+      gap: 6px;
+      max-height: 28px;
+      margin-top: 6px;
+      overflow: hidden;
+      transition: max-height 380ms var(--result-ease), margin 380ms var(--result-ease), opacity 200ms ease, visibility 0s linear 0s;
     }
-    .results-screen.more-open .result-more-btn {
-      justify-self: start;
-      margin-left: 0;
-    }
-    .result-more-btn:hover {
-      background: var(--surface);
-      color: var(--text);
-      transform: none;
-    }
-    .result-more-caret {
-      width: 8px;
-      height: 8px;
-      border-right: 2px solid currentColor;
-      border-bottom: 2px solid currentColor;
-      transform: rotate(45deg) translateY(-2px);
-      transition: transform 220ms ease;
-    }
-    .result-more-btn[aria-expanded="true"] .result-more-caret {
-      transform: rotate(225deg) translateY(-1px);
+    .results-screen.more-open .score-caption-row {
+      max-height: 0;
+      margin-top: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: max-height 380ms var(--result-ease), margin 380ms var(--result-ease), opacity 160ms ease, visibility 0s linear 380ms;
     }
     .result-summary-line {
-      order: 2;
-      width: var(--result-score-size);
+      max-width: 100%;
       color: var(--text);
       font-size: clamp(18px, 1.6vw, 24px);
-      line-height: 1.15;
+      line-height: 1.2;
       font-weight: 700;
-      text-align: center;
-      white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
     .result-delta {
-      order: 3;
-      width: var(--result-score-size);
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 6px;
-      margin-top: -8px;
     }
-    .results-screen.more-open .result-delta {
-      width: min(420px, var(--result-score-size));
-      justify-content: flex-start;
-      margin-top: 0;
+    .results-score-area > .result-delta {
+      margin-top: 10px;
+    }
+    .result-delta:empty {
+      display: none;
     }
     .delta-chip {
       display: inline-flex;
@@ -2239,35 +2211,78 @@
       background: var(--accent-soft);
       color: var(--accent);
     }
-    .results-screen.more-open .results-score-area .result-summary-line {
-      display: block;
-      width: min(420px, var(--result-score-size));
-      text-align: left;
-      font-size: clamp(18px, 1.7vw, 30px);
+    .result-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 0 10px;
     }
+    .results-score-area > .result-more-btn {
+      margin-top: 8px;
+    }
+    .result-more-btn:hover {
+      background: var(--surface);
+      color: var(--text);
+      transform: none;
+    }
+    .result-more-caret {
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg) translateY(-2px);
+      transition: transform 220ms ease;
+    }
+    .result-more-btn[aria-expanded="true"] .result-more-caret {
+      transform: rotate(225deg) translateY(-1px);
+    }
+    /* Height animates via the 0fr -> 1fr grid-row trick, so the column
+       resizes smoothly in both directions instead of snapping on close. */
     .result-advanced-panel {
-      order: 5;
-      position: static;
-      justify-self: start;
-      width: min(430px, 31vw);
-      margin-left: 10px;
-      margin-top: 0;
-      overflow: visible;
+      display: grid;
+      grid-template-rows: 0fr;
+      width: 100%;
       color: var(--text);
       font-size: 15px;
       line-height: 1.4;
       opacity: 0;
-      transform: translateY(14px);
-      pointer-events: none;
-      transition: opacity 240ms ease, transform 320ms cubic-bezier(0.22, 0.8, 0.22, 1);
+      transition: grid-template-rows 380ms var(--result-ease), opacity 220ms ease;
+    }
+    .results-score-area > .result-advanced-panel {
+      margin-top: 0;
     }
     .results-screen.more-open .result-advanced-panel {
+      grid-template-rows: 1fr;
       opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
+      transition: grid-template-rows 380ms var(--result-ease), opacity 260ms ease 80ms;
+    }
+    .result-advanced-inner {
+      min-height: 0;
+      overflow: hidden;
+    }
+    .result-advanced-content {
+      display: grid;
+      gap: 14px;
+      padding: 14px 18px 16px;
+      margin-top: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--panel);
+    }
+    .result-detail-group {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
     }
     .result-advanced-panel h3 {
-      margin: 0 0 6px;
+      margin: 0;
       color: var(--muted);
       font-size: 12px;
       font-weight: 600;
@@ -2275,11 +2290,12 @@
       text-transform: uppercase;
     }
     .result-advanced-panel ul {
-      margin: 0 0 14px;
+      margin: 0;
       padding: 0;
       list-style: none;
       display: flex;
       flex-wrap: wrap;
+      justify-content: center;
       gap: 6px;
       color: var(--text);
       font-weight: 600;
@@ -2289,6 +2305,7 @@
       border-radius: 8px;
       background: var(--surface);
       font-size: 14px;
+      white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
     .result-advanced-panel li .token {
@@ -2299,25 +2316,14 @@
       color: var(--muted);
       font-weight: 500;
     }
-    .result-session-info {
-      display: grid;
-      gap: 3px;
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.78em;
-      font-weight: 600;
-    }
     .rhythm-spikes-line {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
       color: var(--muted);
       font-size: 14px;
       font-weight: 600;
       line-height: 1.2;
-      white-space: nowrap;
     }
-    .rhythm-help-btn,
     .score-help-btn {
       width: 20px;
       height: 20px;
@@ -2333,8 +2339,6 @@
       line-height: 1;
       padding: 0;
     }
-    .rhythm-help-btn:hover,
-    .rhythm-help-btn:focus-visible,
     .score-help-btn:hover,
     .score-help-btn:focus-visible {
       background: var(--accent-soft);
@@ -2342,30 +2346,25 @@
       color: var(--accent);
       transform: none;
     }
-    .score-caption-row {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
     .result-actions {
-      position: absolute;
-      left: 50%;
-      bottom: clamp(22px, 4vh, 44px);
-      transform: translateX(-50%);
-      display: grid;
-      justify-items: center;
-      gap: 12px;
-      width: max-content;
-      max-width: calc(100% - 32px);
-    }
-    .result-actions-buttons {
+      grid-area: actions;
+      justify-self: center;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 10px;
+      max-width: 100%;
     }
     .result-actions .btn[hidden] {
       display: none;
+    }
+    .btn-ghost kbd,
+    .btn-soft kbd {
+      background: transparent;
+    }
+    .results-screen.no-anim,
+    .results-screen.no-anim * {
+      transition: none !important;
     }
     .result-help-backdrop {
       position: fixed;
@@ -3192,62 +3191,25 @@
         padding: 0;
       }
       .results-screen {
-        padding: 28px 18px 32px;
-        overflow-y: auto;
+        --result-score-size: min(56vw, 210px);
+        --result-score-small-size: min(40vw, 150px);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto auto auto;
+        grid-template-areas:
+          "title"
+          "score"
+          "heat"
+          "actions";
+        align-content: start;
+        row-gap: 28px;
+        padding: 24px 18px 32px;
       }
-      .results-title,
-      .results-heatmap-area,
-      .results-score-area,
-      .result-advanced-panel,
-      .result-actions {
-        position: static;
+      .results-score-area {
+        width: min(100%, 420px);
+        align-self: start;
       }
-      .results-title {
-        margin-bottom: 20px;
-      }
-      .results-heatmap-area,
-      .results-screen.more-open .results-heatmap-area {
-        width: 100%;
-        transform: none;
-        margin-top: 12px;
-      }
-      .results-score-area,
-      .results-screen.more-open .results-score-area {
-        width: min(100%, 320px);
-        margin: 28px auto 0;
-        justify-items: center;
-        gap: 14px;
-      }
-      .score-donut,
-      .results-screen.more-open .score-donut {
-        width: min(60vw, 220px);
-      }
-      .score-value,
       .results-screen.more-open .score-value {
-        font-size: 56px;
-      }
-      .results-screen.more-open .score-caption {
-        display: block;
-      }
-      .result-summary-line,
-      .result-delta,
-      .results-screen.more-open .result-delta {
-        width: auto;
-        justify-content: center;
-        text-align: center;
-      }
-      .results-screen.more-open .result-more-btn {
-        justify-self: center;
-      }
-      .result-advanced-panel {
-        width: 100%;
-        margin: 8px auto 0;
-      }
-      .result-actions {
-        width: auto;
-        max-width: none;
-        margin: 28px auto 0;
-        transform: none;
+        font-size: 40px;
       }
       .results-keyboard .key {
         height: 38px;
@@ -3307,20 +3269,6 @@
       .block-card {
         min-height: clamp(170px, 26vh, 220px);
       }
-      .results-heatmap-area {
-        top: clamp(170px, 35vh, 250px);
-      }
-      .results-score-area {
-        top: clamp(86px, 15vh, 132px);
-      }
-      .score-donut {
-        width: clamp(200px, 22vw, 280px);
-      }
-      .results-screen.more-open .result-actions {
-        left: var(--result-heatmap-left);
-        transform: none;
-        justify-items: start;
-      }
     }
     @media (prefers-reduced-motion: reduce) {
       .fullscreen-alert.visible {
@@ -3338,8 +3286,8 @@
       .app.shell-hidden .slide-enter,
       .app.shell-hidden .slide-exit,
       .score-donut,
-      .results-score-area,
-      .results-heatmap-area,
+      .score-value,
+      .score-caption-row,
       .result-advanced-panel,
       .result-more-caret {
         transition: none;
@@ -3713,15 +3661,18 @@
           <span id="resultMoreLabel">Details</span>
           <span class="result-more-caret" aria-hidden="true"></span>
         </button>
-        <div id="resultAdvancedPanel" class="result-advanced-panel" hidden>
-          <h3>Slowest keys</h3>
-          <ul id="slowKeys"></ul>
-          <h3>Slowest letter pairs</h3>
-          <ul id="slowBigrams"></ul>
-          <div class="result-session-info">
-            <div class="rhythm-spikes-line">
-              <span id="resRhythm">0 rhythm spikes</span>
-              <button type="button" id="rhythmHelpBtn" class="rhythm-help-btn" aria-label="What are rhythm spikes?">?</button>
+        <div id="resultAdvancedPanel" class="result-advanced-panel" inert aria-hidden="true">
+          <div class="result-advanced-inner">
+            <div class="result-advanced-content">
+              <div class="result-detail-group">
+                <h3>Slowest keys</h3>
+                <ul id="slowKeys"></ul>
+              </div>
+              <div class="result-detail-group">
+                <h3>Slowest letter pairs</h3>
+                <ul id="slowBigrams"></ul>
+              </div>
+              <div id="resRhythm" class="rhythm-spikes-line">0 rhythm spikes</div>
             </div>
           </div>
         </div>
@@ -3740,16 +3691,9 @@
         </div>
       </div>
       <div class="result-actions">
-        <div class="result-actions-buttons">
-          <button type="button" id="resultHomeBtn" class="btn btn-ghost">Home</button>
-          <button type="button" id="resultRetryBtn" class="btn btn-soft">Retry</button>
-          <button type="button" id="resultNextBtn" class="btn btn-primary">Next block <kbd>Enter</kbd></button>
-        </div>
-        <div class="key-hints" aria-hidden="true">
-          <span><kbd>Enter</kbd> next</span>
-          <span id="resultRetryHint"><kbd>R</kbd> retry</span>
-          <span><kbd>Esc</kbd> home</span>
-        </div>
+        <button type="button" id="resultHomeBtn" class="btn btn-ghost">Home <kbd>Esc</kbd></button>
+        <button type="button" id="resultRetryBtn" class="btn btn-soft">Retry <kbd>R</kbd></button>
+        <button type="button" id="resultNextBtn" class="btn btn-primary">Next block <kbd>Enter</kbd></button>
       </div>
     </section>
 
@@ -3975,13 +3919,11 @@
       resultDelta: document.getElementById("resultDelta"),
       resultsKicker: document.getElementById("resultsKicker"),
       resultAdvancedPanel: document.getElementById("resultAdvancedPanel"),
-      rhythmHelpBtn: document.getElementById("rhythmHelpBtn"),
       scoreHelpBtn: document.getElementById("scoreHelpBtn"),
       resultHelpBackdrop: document.getElementById("resultHelpBackdrop"),
       keyboardMap: document.getElementById("keyboardMap"),
       resultHomeBtn: document.getElementById("resultHomeBtn"),
       resultRetryBtn: document.getElementById("resultRetryBtn"),
-      resultRetryHint: document.getElementById("resultRetryHint"),
       resultNextBtn: document.getElementById("resultNextBtn"),
       drillExitBtn: document.getElementById("drillExitBtn"),
       drillText: document.getElementById("drillText"),
@@ -4498,63 +4440,6 @@
 
     function clampNumber(value, min, max) {
       return Math.max(min, Math.min(max, value));
-    }
-
-    function refreshResultsLayout() {
-      if (!ui.resultsPhase) return;
-      const w = window.innerWidth || document.documentElement.clientWidth || 1200;
-      const h = window.innerHeight || document.documentElement.clientHeight || 800;
-      if (w <= 920) {
-        [
-          "--result-title-left",
-          "--result-title-top",
-          "--result-heatmap-left",
-          "--result-heatmap-top",
-          "--result-heatmap-width",
-          "--result-score-left",
-          "--result-score-top",
-          "--result-score-size",
-          "--result-score-small-size",
-          "--result-details-top",
-          "--result-details-max-height"
-        ].forEach(name => ui.resultsPhase.style.removeProperty(name));
-        return;
-      }
-
-      const titleLeft = clampNumber(w * 0.076, 74, 146);
-      const titleTop = clampNumber(h * 0.112, 58, 124);
-      const heatLeft = clampNumber(w * 0.105, 88, 202);
-      const heatTop = clampNumber(h * 0.38, 270, 418);
-      const rightPad = clampNumber(w * 0.075, 92, 150);
-      const columnGap = clampNumber(w * 0.052, 64, 124);
-      const scoreTop = clampNumber(h * 0.185, 132, 216);
-      const scoreSize = clampNumber(Math.min(w * 0.245, h * 0.43), 260, 480);
-      const smallScoreSize = clampNumber(Math.min(w * 0.13, h * 0.205), 132, 230);
-      const scoreRoomLeft = heatLeft + 380 + columnGap;
-      const scoreRoomRight = w - rightPad - scoreSize;
-      const preferredScoreLeft = Math.max(w * 0.56, heatLeft + 420 + columnGap);
-      const scoreLeft = scoreRoomRight < scoreRoomLeft
-        ? scoreRoomRight
-        : clampNumber(preferredScoreLeft, scoreRoomLeft, scoreRoomRight);
-      const heatWidth = clampNumber(scoreLeft - heatLeft - columnGap, 360, 650);
-      const detailsGap = clampNumber(h * 0.135, 144, 164);
-      const detailsTop = scoreTop + smallScoreSize + detailsGap;
-      const detailsMaxHeight = Math.max(190, h - detailsTop - clampNumber(h * 0.12, 112, 142));
-
-      const vars = {
-        "--result-title-left": `${titleLeft}px`,
-        "--result-title-top": `${titleTop}px`,
-        "--result-heatmap-left": `${heatLeft}px`,
-        "--result-heatmap-top": `${heatTop}px`,
-        "--result-heatmap-width": `${heatWidth}px`,
-        "--result-score-left": `${scoreLeft}px`,
-        "--result-score-top": `${scoreTop}px`,
-        "--result-score-size": `${scoreSize}px`,
-        "--result-score-small-size": `${smallScoreSize}px`,
-        "--result-details-top": `${detailsTop}px`,
-        "--result-details-max-height": `${detailsMaxHeight}px`
-      };
-      Object.entries(vars).forEach(([name, value]) => ui.resultsPhase.style.setProperty(name, value));
     }
 
     function ensureTodayStreakBucket() {
@@ -5370,7 +5255,6 @@
     }
 
     function renderResults() {
-      refreshResultsLayout();
       const score = calculateResultScore(state.results);
       const wpmText = state.results.wpm ? state.results.wpm.toFixed(1) : "0";
       const accuracyText = state.results.accuracy ? `${state.results.accuracy.toFixed(1)}%` : "0%";
@@ -5391,7 +5275,6 @@
       renderKeyboardHeatmap();
       animateResultScore(score);
       replayResultsHeatmap();
-      refreshResultsLayout();
     }
 
     function renderResultTimingList(listEl, items) {
@@ -5440,7 +5323,7 @@
         return;
       }
       if (comparison.baseline) {
-        ui.resultDelta.innerHTML = `<span class="delta-chip best">Baseline set · future blocks compare to this</span>`;
+        ui.resultDelta.innerHTML = `<span class="delta-chip best">Baseline set</span>`;
         return;
       }
       const chips = [];
@@ -5464,7 +5347,6 @@
         ui.resultNextBtn.innerHTML = `${afterDiagnostic ? "Start training" : "Next block"} <kbd>Enter</kbd>`;
       }
       if (ui.resultRetryBtn) ui.resultRetryBtn.hidden = afterDiagnostic;
-      if (ui.resultRetryHint) ui.resultRetryHint.hidden = afterDiagnostic;
       if (ui.resultsKicker) {
         ui.resultsKicker.textContent = afterDiagnostic
           ? "Your starting point. Next up: a block built from this."
@@ -5583,26 +5465,31 @@
     }
 
     function setResultsExpanded(expanded, options = {}) {
+      const screen = ui.resultsPhase;
+      const panel = ui.resultAdvancedPanel;
       ui.resultMoreBtn.setAttribute("aria-expanded", String(expanded));
       ui.resultMoreLabel.textContent = expanded ? "Hide details" : "Details";
-      if (expanded) {
-        ui.resultAdvancedPanel.hidden = false;
-        requestAnimationFrame(() => {
-          refreshResultsLayout();
-          ui.resultsPhase.classList.add("more-open");
-          refreshResultsLayout();
-        });
-      } else if (options.immediate) {
-        ui.resultsPhase.classList.remove("more-open");
-        ui.resultAdvancedPanel.hidden = true;
-        refreshResultsLayout();
-      } else {
-        ui.resultsPhase.classList.remove("more-open");
-        refreshResultsLayout();
-        window.setTimeout(() => {
-          if (!ui.resultsPhase.classList.contains("more-open")) ui.resultAdvancedPanel.hidden = true;
-        }, 320);
+      panel.inert = !expanded;
+      panel.setAttribute("aria-hidden", String(!expanded));
+      if (runtime.resultDetailsScrollTimer) {
+        clearTimeout(runtime.resultDetailsScrollTimer);
+        runtime.resultDetailsScrollTimer = null;
       }
+      if (options.immediate) {
+        screen.classList.add("no-anim");
+        screen.classList.toggle("more-open", expanded);
+        void screen.offsetHeight;
+        screen.classList.remove("no-anim");
+        return;
+      }
+      screen.classList.toggle("more-open", expanded);
+      if (!expanded) return;
+      // On stacked (narrow) layouts the panel can open below the fold; bring it into view.
+      runtime.resultDetailsScrollTimer = window.setTimeout(() => {
+        runtime.resultDetailsScrollTimer = null;
+        const overflow = panel.getBoundingClientRect().bottom - screen.getBoundingClientRect().bottom;
+        if (overflow > 0) screen.scrollBy({ top: overflow + 16, behavior: "smooth" });
+      }, 400);
     }
 
     function toggleResultsExpanded() {
@@ -7138,7 +7025,6 @@
       document.addEventListener("keydown", handleShortcutKeydown);
       ui.resultMoreBtn.addEventListener("click", toggleResultsExpanded);
       ui.focusHelpBtn.addEventListener("click", () => setFocusHelpOpen(true));
-      ui.rhythmHelpBtn.addEventListener("click", () => setResultHelpOpen(true));
       ui.scoreHelpBtn.addEventListener("click", () => setResultHelpOpen(true));
       ui.resultHelpBackdrop.addEventListener("click", e => {
         if (e.target === ui.resultHelpBackdrop) setResultHelpOpen(false);
@@ -7170,7 +7056,6 @@
       });
       window.addEventListener("resize", () => {
         refreshActiveTypingLayout();
-        refreshResultsLayout();
         refreshFullscreenAlert();
         scheduleStatsGraphRender();
       });
@@ -7178,7 +7063,6 @@
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", () => {
           refreshActiveTypingLayout();
-          refreshResultsLayout();
           scheduleStatsGraphRender();
           refreshFullscreenAlert();
         });
